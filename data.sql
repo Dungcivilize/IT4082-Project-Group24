@@ -1132,4 +1132,63 @@ VALUES ('Đợt thu phí tháng 3', 19, 2, '2025-04-02');
 INSERT INTO collection_period (cp_name, resident_id, accountant_id, collection_date)
 VALUES ('Đợt thu phí tháng 3', 20, 6, '2025-04-02');
 
---
+--Them du lieu cho payment
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (1, 1,200000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (1, 2,276000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (2, 3,100000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (3, 4,250000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (3, 5,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (3, 6,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (4, 7,250000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (4, 8,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (4, 9,60000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (5, 10,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (5, 11,100000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (5, 12,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (6, 13,250000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (7, 14,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (7, 15,276000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (7, 16,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (8, 17,60000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (8, 18,250000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (9, 19,60000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (9, 20,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (10, 21,200000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (10, 22,300000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (10, 23,276000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (11, 24,200000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (11, 25,60000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (12, 26,276000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (12, 27,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (12, 28,60000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (13, 29,60000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (13, 30,100000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (14, 31,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (15, 32,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (15, 33,300000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (16, 34,300000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (16, 35,100000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (17, 36,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (17, 37,100000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (17, 38,200000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (18, 39,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (18, 40,150000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (18, 41,300000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (19, 42,300000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (19, 43,250000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (19, 44,200000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (20, 45,500000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (20, 46,250000);
+INSERT INTO payment (citizen_id, cp_id,cost) VALUES (20, 47,300000);
+
+-- Them du lieu cho revenue
+INSERT INTO revenue (revenue_name, cost)
+SELECT 
+    CONCAT('Doanh thu từ đợt thu phí: ', cp.cp_name) AS revenue_name,
+    SUM(p.cost) AS total_cost
+FROM 
+    collection_period cp
+JOIN 
+    payment p ON cp.cp_id = p.cp_id
+GROUP BY 
+    cp.cp_name;
