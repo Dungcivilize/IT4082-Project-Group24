@@ -1192,3 +1192,11 @@ JOIN
     payment p ON cp.cp_id = p.cp_id
 GROUP BY 
     cp.cp_name;
+
+UPDATE service_registration
+SET quantity = 3
+WHERE service_id IN (1,2);
+
+UPDATE service_registration
+SET quantity = 40
+WHERE service_id IN (7,8);
