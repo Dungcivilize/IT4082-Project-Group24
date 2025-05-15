@@ -108,3 +108,6 @@ CREATE TABLE revenue (
 
 ALTER TABLE resident
 ADD CONSTRAINT unique_householder UNIQUE(householder_id);
+
+ALTER TABLE service_registration
+ADD quantity INT DEFAULT 1;
