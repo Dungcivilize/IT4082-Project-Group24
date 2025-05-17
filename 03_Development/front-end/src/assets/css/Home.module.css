@@ -1,0 +1,68 @@
+.hero {
+    position: relative;
+    background: url('../img/anhchungcu.png') no-repeat center center/cover;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+  }
+  
+  
+  .container {
+    z-index: 2;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 2rem;
+  }
+  
+  .navbar {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    width: 100vw;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    margin: 0;
+    padding: 1rem 0;
+  }
+  
+  .navLink {
+    position: relative;
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+    padding: 0.5rem 1rem;
+  }
+  
+  .navLink:hover {
+    color: #0d6efd;
+    border-bottom: 2px solid #0d6efd;
+  }
+  
+  .stats {
+    padding: 4rem 0;
+    background-color: #f8f9fa;
+    margin: 0;
+    width: 100vw;
+  }
+  
+  .footer {
+    background-color: #343a40;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    width: 100vw;
+    margin: 0;
+  } 
