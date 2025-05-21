@@ -1200,3 +1200,16 @@ WHERE service_id IN (1,2);
 UPDATE service_registration
 SET quantity = 40
 WHERE service_id IN (7,8);
+
+UPDATE payment 
+SET status = 'PAID' 
+WHERE payment_id IN (
+    SELECT payment_id 
+    FROM (
+        SELECT payment_id 
+        FROM payment 
+        WHERE status = 'UNPAID' 
+        ORDER BY RAND() 
+        LIMIT 20
+    ) AS temp
+);

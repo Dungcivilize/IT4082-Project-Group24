@@ -2,6 +2,7 @@ package com.KTPM.KTPM.Controllers;
 
 import com.KTPM.KTPM.DTO.DeleteServiceRequest;
 import com.KTPM.KTPM.DTO.ServiceRegistrationRequest;
+import com.KTPM.KTPM.DTO.ServiceRegistrationResponse;
 import com.KTPM.KTPM.Models.Resident;
 import com.KTPM.KTPM.Models.Service;
 import com.KTPM.KTPM.Models.ServiceRegistration;
@@ -13,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/service-registrations")
@@ -28,6 +31,21 @@ public class ServiceRegistrationController {
     @Autowired
     private ServiceRepository serviceRepo;
 
+    @GetMapping("/resident/{residentId}")
+    public ResponseEntity<?> getRegisteredServices(@PathVariable Long residentId) {
+        List<ServiceRegistration> registrations = registrationRepo.findByResident_ResidentId(residentId);
+        List<ServiceRegistrationResponse> response = registrations.stream().map(reg ->
+                new ServiceRegistrationResponse(
+                        reg.getSrId(),
+                        reg.getService().getServiceId(),
+                        reg.getService().getServiceName(),
+                        reg.getService().getDescription(),
+                        reg.getService().getFee(),
+                        reg.getQuantity()
+                )
+        ).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
     @PostMapping("/register")
     public ResponseEntity<?> registerService(@RequestBody ServiceRegistrationRequest request) {
         Optional<Resident> residentOpt = residentRepo.findById(request.getResidentId());

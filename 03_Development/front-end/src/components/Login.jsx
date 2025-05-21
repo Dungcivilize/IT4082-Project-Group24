@@ -45,7 +45,7 @@ const Login = () => {
         userId: data.user_id,
         username: data.user_name,
         roleId: data.role, // Thay đổi từ roleId thành role
-        fullname: data.fullname
+        fullname: data.fullname,
       }));
 
       // Điều hướng dựa vào role

@@ -111,3 +111,6 @@ ADD CONSTRAINT unique_householder UNIQUE(householder_id);
 
 ALTER TABLE service_registration
 ADD quantity INT DEFAULT 1;
+
+ALTER TABLE payment
+ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'UNPAID';
