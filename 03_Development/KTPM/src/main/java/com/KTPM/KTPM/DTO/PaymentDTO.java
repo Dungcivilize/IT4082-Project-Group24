@@ -9,6 +9,7 @@ public class PaymentDTO {
     private Double cost;
     private String cpName;
     private String collectionDate;
+    private String status;
 
     // Constructor
     public PaymentDTO(Payment payment) {
@@ -18,6 +19,7 @@ public class PaymentDTO {
         this.cost = payment.getCost();
         this.cpName = payment.getCollectionPeriod().getCpName();
         this.collectionDate = payment.getCollectionPeriod().getCollectionDate().toString();
+        this.status = payment.getStatus().toString();
     }
 
     // Getters and Setters
@@ -67,5 +69,13 @@ public class PaymentDTO {
 
     public void setCollectionDate(String collectionDate) {
         this.collectionDate = collectionDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
