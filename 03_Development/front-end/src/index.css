@@ -13,6 +13,20 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+  width: 100vw;
+  min-height: 100vh;
+  text-align: initial !important;
+  background: #fff;
+  display: block !important;
+  align-items: initial !important;
+  justify-items: initial !important;
+  place-items: initial !important;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
