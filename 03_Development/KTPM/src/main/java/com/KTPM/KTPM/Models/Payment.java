@@ -49,6 +49,7 @@ public class Payment {
         this.citizen = citizen;
     }
 
+
     public CollectionPeriod getCollectionPeriod() {
         return collectionPeriod;
     }

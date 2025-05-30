@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from '../../assets/css/Dashboard.module.css';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "../../assets/css/Dashboard.module.css";
 
 const ManagerPayment = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,12 +13,12 @@ const ManagerPayment = () => {
 
   // Form state
   const initialFormState = {
-    paymentId: '',
-    cpName: '',
-    collectionDate: '',
-    cost: '',
-    citizenId: '',
-    status: '',
+    paymentId: "",
+    cpName: "",
+    collectionDate: "",
+    cost: "",
+    citizenId: "",
+    status: "",
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -29,8 +29,8 @@ const ManagerPayment = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8080/api/payments');
-      if (!response.ok) throw new Error('Failed to fetch payments');
+      const response = await fetch("http://localhost:8080/api/payments");
+      if (!response.ok) throw new Error("Failed to fetch payments");
       const data = await response.json();
       setPayments(data);
     } catch (err) {
@@ -45,13 +45,13 @@ const ManagerPayment = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const resetForm = () => {
@@ -67,36 +67,54 @@ const ManagerPayment = () => {
 
   // Add new payment
   const handleAddPayment = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.cpName || !formData.collectionDate || !formData.cost || !formData.citizenId || !formData.status) {
-      setError('Please fill in all required fields');
-      return;
-    }
+  e.preventDefault();
 
-    try {
-      const response = await fetch('http://localhost:8080/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+  if (
+    !formData.cpName ||
+    !formData.collectionDate ||
+    !formData.cost ||
+    !formData.citizenId ||
+    !formData.status
+  ) {
+    setError("Please fill in all required fields");
+    return;
+  }
+
+  try {
+    // 🧠 Tự động lấy accountantId từ backend theo user.userId
+    const accResponse = await fetch(
+      `http://localhost:8080/api/accountants/by-user/${user.userId}`
+    );
+    if (!accResponse.ok) throw new Error("Failed to fetch accountant ID");
+
+    const accountantId = await accResponse.json(); // trả về số nguyên
+
+    const response = await fetch(
+      "http://localhost:8080/api/payments/add-payment",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cpName: formData.cpName,
           collectionDate: formData.collectionDate,
           cost: Number(formData.cost),
           citizenId: formData.citizenId,
           status: formData.status,
+          accountantId, // ✅ gửi cho backend, không cần hiện form
         }),
-      });
+      }
+    );
 
-      if (!response.ok) throw new Error('Failed to add payment');
-      
-      const newPayment = await response.json();
-      setPayments(prev => [...prev, newPayment]);
-      resetForm();
-      showSuccess('Payment added successfully!');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+    if (!response.ok) throw new Error("Failed to add payment");
+
+    await fetchPayments(); // refresh lại danh sách
+    resetForm();
+    showSuccess("Payment added successfully!");
+  } catch (err) {
+    setError(err.message);
+  }
+};
+
 
   // Edit payment
   const handleEditClick = (payment) => {
@@ -106,10 +124,10 @@ const ManagerPayment = () => {
       collectionDate: payment.collectionDate,
       cost: payment.cost,
       citizenId: payment.citizenId,
-      status: payment.status || '',
+      status: payment.status || "",
     });
     setIsEditing(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Update payment
@@ -117,31 +135,36 @@ const ManagerPayment = () => {
     e.preventDefault();
 
     if (!formData.status) {
-      setError('Please select a status');
+      setError("Please select a status");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/payments/${formData.paymentId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cpName: formData.cpName,
-          collectionDate: formData.collectionDate,
-          cost: Number(formData.cost),
-          citizenId: formData.citizenId,
-          status: formData.status,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/payments/${formData.paymentId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cpName: formData.cpName,
+            collectionDate: formData.collectionDate,
+            cost: Number(formData.cost),
+            citizenId: formData.citizenId,
+            status: formData.status,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to update payment');
-      
+      if (!response.ok) throw new Error("Failed to update payment");
+
       const updatedPayment = await response.json();
-      setPayments(prev =>
-        prev.map(p => (p.paymentId === updatedPayment.paymentId ? updatedPayment : p))
+      setPayments((prev) =>
+        prev.map((p) =>
+          p.paymentId === updatedPayment.paymentId ? updatedPayment : p
+        )
       );
       resetForm();
-      showSuccess('Payment updated successfully!');
+      showSuccess("Payment updated successfully!");
     } catch (err) {
       setError(err.message);
     }
@@ -149,17 +172,21 @@ const ManagerPayment = () => {
 
   // Delete payment
   const handleDeletePayment = async (paymentId) => {
-    if (!window.confirm('Are you sure you want to delete this payment?')) return;
+    if (!window.confirm("Are you sure you want to delete this payment?"))
+      return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/payments/${paymentId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/payments/${paymentId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to delete payment');
-      
-      setPayments(prev => prev.filter(p => p.paymentId !== paymentId));
-      showSuccess('Payment deleted successfully!');
+      if (!response.ok) throw new Error("Failed to delete payment");
+
+      setPayments((prev) => prev.filter((p) => p.paymentId !== paymentId));
+      showSuccess("Payment deleted successfully!");
     } catch (err) {
       setError(err.message);
     }
@@ -169,8 +196,13 @@ const ManagerPayment = () => {
     <div className={styles.dashboard}>
       <nav className={`${styles.navbar} navbar-expand-lg`}>
         <div className="container-fluid">
-          <div className="d-flex justify-content-center align-items-center w-100"> {/* Đổi từ justify-content-between thành justify-content-center */}
-            <h1 className={`${styles.title} mb-0 text-center`}>Payment Management</h1> {/* Thêm text-center */}
+          <div className="d-flex justify-content-center align-items-center w-100">
+            {" "}
+            {/* Đổi từ justify-content-between thành justify-content-center */}
+            <h1 className={`${styles.title} mb-0 text-center`}>
+              Payment Management
+            </h1>{" "}
+            {/* Thêm text-center */}
           </div>
         </div>
       </nav>
@@ -184,12 +216,20 @@ const ManagerPayment = () => {
                 <h5 className="card-title mb-3">User Information</h5>
                 <div className="row">
                   <div className="col-md-6">
-                    <p className="mb-2"><strong>Name:</strong> {user?.fullname}</p>
-                    <p className="mb-2"><strong>Email:</strong> {user?.username}</p>
+                    <p className="mb-2">
+                      <strong>Name:</strong> {user?.fullname}
+                    </p>
+                    <p className="mb-2">
+                      <strong>Email:</strong> {user?.username}
+                    </p>
                   </div>
                   <div className="col-md-6">
-                    <p className="mb-2"><strong>Role:</strong> Manager</p>
-                    <p className="mb-0"><strong>ID:</strong> {user?.userId}</p>
+                    <p className="mb-2">
+                      <strong>Role:</strong> Manager
+                    </p>
+                    <p className="mb-0">
+                      <strong>ID:</strong> {user?.userId}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -202,23 +242,29 @@ const ManagerPayment = () => {
 
         {/* Messages */}
         {error && (
-          <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <div
+            className="alert alert-danger alert-dismissible fade show"
+            role="alert"
+          >
             {error}
-            <button 
-              type="button" 
-              className="btn-close" 
+            <button
+              type="button"
+              className="btn-close"
               onClick={() => setError(null)}
               aria-label="Close"
             ></button>
           </div>
         )}
-        
+
         {successMessage && (
-          <div className="alert alert-success alert-dismissible fade show" role="alert">
+          <div
+            className="alert alert-success alert-dismissible fade show"
+            role="alert"
+          >
             {successMessage}
-            <button 
-              type="button" 
-              className="btn-close" 
+            <button
+              type="button"
+              className="btn-close"
               onClick={() => setSuccessMessage(null)}
               aria-label="Close"
             ></button>
@@ -229,9 +275,9 @@ const ManagerPayment = () => {
         <div className={`${styles.card} card mb-4 shadow-sm`}>
           <div className="card-body">
             <h5 className="card-title mb-4">
-              {isEditing ? 'Update Payment' : 'Add New Payment'}
+              {isEditing ? "Update Payment" : "Add New Payment"}
             </h5>
-            
+
             <form onSubmit={isEditing ? handleUpdatePayment : handleAddPayment}>
               <div className="row g-3">
                 <div className="col-md-6">
@@ -245,7 +291,7 @@ const ManagerPayment = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="col-md-6">
                   <label className="form-label">Collection Date*</label>
                   <input
@@ -257,7 +303,7 @@ const ManagerPayment = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="col-md-6">
                   <label className="form-label">Amount*</label>
                   <input
@@ -271,7 +317,7 @@ const ManagerPayment = () => {
                     step="25000"
                   />
                 </div>
-                
+
                 <div className="col-md-6">
                   <label className="form-label">Citizen ID*</label>
                   <input
@@ -283,7 +329,7 @@ const ManagerPayment = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="col-md-6">
                   <label className="form-label">Status*</label>
                   <select
@@ -294,20 +340,20 @@ const ManagerPayment = () => {
                     required
                   >
                     <option value="">-- Select Status --</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
-                    <option value="Pending">Pending</option>
+                    <option value="PAID">Paid</option>
+                    <option value="UNPAID">Unpaid</option>
+                    <option value="PENDING">Pending</option>
                   </select>
                 </div>
-                
+
                 <div className="col-12 mt-2">
                   <div className="d-flex justify-content-start gap-2">
                     <button type="submit" className="btn btn-primary px-4">
-                      {isEditing ? 'Update' : 'Add Payment'}
+                      {isEditing ? "Update" : "Add Payment"}
                     </button>
                     {isEditing && (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="btn btn-outline-secondary"
                         onClick={resetForm}
                       >
@@ -332,7 +378,7 @@ const ManagerPayment = () => {
                 </span>
               </div>
             </div>
-            
+
             {loading ? (
               <div className="text-center py-4">
                 <div className="spinner-border text-primary" role="status">
@@ -359,18 +405,27 @@ const ManagerPayment = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map(payment => (
+                    {payments.map((payment) => (
                       <tr key={payment.paymentId}>
                         <td>{payment.paymentId}</td>
                         <td>{payment.cpName}</td>
-                        <td>{new Date(payment.collectionDate).toLocaleDateString()}</td>
+                        <td>
+                          {new Date(
+                            payment.collectionDate
+                          ).toLocaleDateString()}
+                        </td>
                         <td>{payment.cost.toFixed(2)}</td>
                         <td>{payment.citizenId}</td>
                         <td>
-                          <span className={`badge ${
-                            payment.status === 'Paid' ? 'bg-success' : 
-                            payment.status === 'Unpaid' ? 'bg-danger' : 'bg-warning'
-                          }`}>
+                          <span
+                            className={`badge ${
+                              payment.status === "Paid"
+                                ? "bg-success"
+                                : payment.status === "Unpaid"
+                                ? "bg-danger"
+                                : "bg-warning"
+                            }`}
+                          >
                             {payment.status}
                           </span>
                         </td>
@@ -384,7 +439,9 @@ const ManagerPayment = () => {
                             </button>
                             <button
                               className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleDeletePayment(payment.paymentId)}
+                              onClick={() =>
+                                handleDeletePayment(payment.paymentId)
+                              }
                             >
                               <i className="bi bi-trash"></i> Delete
                             </button>
