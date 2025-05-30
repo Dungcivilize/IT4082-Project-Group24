@@ -18,7 +18,7 @@ public class CollectionPeriodService {
     public List<CollectionPeriodDTO> getAllCollectionPeriods() {
         List<CollectionPeriod> periods = collectionPeriodRepository.findAll();
         return periods.stream()
-                .map(p -> new CollectionPeriodDTO(p.getCpId(), p.getCpName(), p.getCollectionDate()))
+                .map(CollectionPeriodDTO::new)  // Sử dụng constructor nhận entity để set đầy đủ
                 .collect(Collectors.toList());
     }
 
