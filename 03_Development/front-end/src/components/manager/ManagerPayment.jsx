@@ -7,6 +7,9 @@ const ManagerPayment = () => {
   const user = JSON.parse(localStorage.getItem('user'));
 
   const [payments, setPayments] = useState([]);
+  const [citizens, setCitizens] = useState([]);
+  const [residents, setResidents] = useState([]);
+  const [accountants, setAccountants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -18,36 +21,56 @@ const ManagerPayment = () => {
     collectionDate: '',
     cost: '',
     citizenId: '',
-    status: '',
+    status: 'UNPAID',
+    accountantId: user?.userId || '',
+    residentId: ''
   };
 
   const [formData, setFormData] = useState(initialFormState);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Load payment list
-  const fetchPayments = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('http://localhost:8080/api/payments');
-      if (!response.ok) throw new Error('Failed to fetch payments');
-      const data = await response.json();
-      setPayments(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load all necessary data
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [paymentsRes, citizensRes, residentsRes, accountantsRes] = await Promise.all([
+          fetch('http://localhost:8080/api/payments'),
+          fetch('http://localhost:8080/api/citizens'),
+          fetch('http://localhost:8080/api/residents'),
+          fetch('http://localhost:8080/api/accountants')
+        ]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
+        if (!paymentsRes.ok) throw new Error('Failed to fetch payments');
+        if (!citizensRes.ok) throw new Error('Failed to fetch citizens');
+        if (!residentsRes.ok) throw new Error('Failed to fetch residents');
+        if (!accountantsRes.ok) throw new Error('Failed to fetch accountants');
+
+        const [paymentsData, citizensData, residentsData, accountantsData] = await Promise.all([
+          paymentsRes.json(),
+          citizensRes.json(),
+          residentsRes.json(),
+          accountantsRes.json()
+        ]);
+
+        setPayments(paymentsData);
+        setCitizens(citizensData);
+        setResidents(residentsData);
+        setAccountants(accountantsData);
+
+        // Set default residentId if available
+        if (residentsData.length > 0) {
+          setFormData(prev => ({ ...prev, residentId: residentsData[0].residentId }));
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,6 +81,7 @@ const ManagerPayment = () => {
     setFormData(initialFormState);
     setIsEditing(false);
     setSuccessMessage(null);
+    setError(null);
   };
 
   const showSuccess = (message) => {
@@ -68,8 +92,9 @@ const ManagerPayment = () => {
   // Add new payment
   const handleAddPayment = async (e) => {
     e.preventDefault();
-    
-    if (!formData.cpName || !formData.collectionDate || !formData.cost || !formData.citizenId || !formData.status) {
+
+    if (!formData.cpName || !formData.collectionDate || !formData.cost || 
+        !formData.citizenId || !formData.residentId || !formData.accountantId) {
       setError('Please fill in all required fields');
       return;
     }
@@ -83,12 +108,17 @@ const ManagerPayment = () => {
           collectionDate: formData.collectionDate,
           cost: Number(formData.cost),
           citizenId: formData.citizenId,
-          status: formData.status,
+          residentId: formData.residentId,
+          accountantId: formData.accountantId,
+          status: formData.status
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to add payment');
-      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add payment');
+      }
+
       const newPayment = await response.json();
       setPayments(prev => [...prev, newPayment]);
       resetForm();
@@ -98,15 +128,18 @@ const ManagerPayment = () => {
     }
   };
 
+
   // Edit payment
   const handleEditClick = (payment) => {
     setFormData({
       paymentId: payment.paymentId,
-      cpName: payment.cpName,
-      collectionDate: payment.collectionDate,
-      cost: payment.cost,
-      citizenId: payment.citizenId,
-      status: payment.status || '',
+      cpName: payment.cpName || payment.collectionPeriod?.cpName || '',
+      collectionDate: payment.collectionDate || payment.collectionPeriod?.collectionDate || '',
+      cost: payment.cost || 0,
+      citizenId: payment.citizenId || payment.citizen?.citizenId || '',
+      status: payment.status || 'UNPAID',
+      accountantId: payment.accountantId || payment.collectionPeriod?.accountant?.accountantId || user?.userId || '',
+      residentId: payment.residentId || payment.collectionPeriod?.resident?.residentId || (residents[0]?.residentId || ''),
     });
     setIsEditing(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -116,8 +149,9 @@ const ManagerPayment = () => {
   const handleUpdatePayment = async (e) => {
     e.preventDefault();
 
-    if (!formData.status) {
-      setError('Please select a status');
+    if (!formData.cpName || !formData.collectionDate || !formData.cost || 
+        !formData.citizenId || !formData.residentId || !formData.accountantId) {
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -130,22 +164,28 @@ const ManagerPayment = () => {
           collectionDate: formData.collectionDate,
           cost: Number(formData.cost),
           citizenId: formData.citizenId,
-          status: formData.status,
+          residentId: formData.residentId,
+          accountantId: formData.accountantId,
+          status: formData.status
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to update payment');
-      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update payment');
+      }
+
       const updatedPayment = await response.json();
-      setPayments(prev =>
-        prev.map(p => (p.paymentId === updatedPayment.paymentId ? updatedPayment : p))
-      );
+      setPayments(prev => prev.map(p =>
+        p.paymentId === updatedPayment.paymentId ? updatedPayment : p
+      ));
       resetForm();
       showSuccess('Payment updated successfully!');
     } catch (err) {
       setError(err.message);
     }
   };
+
 
   // Delete payment
   const handleDeletePayment = async (paymentId) => {
@@ -169,8 +209,8 @@ const ManagerPayment = () => {
     <div className={styles.dashboard}>
       <nav className={`${styles.navbar} navbar-expand-lg`}>
         <div className="container-fluid">
-          <div className="d-flex justify-content-center align-items-center w-100"> {/* Đổi từ justify-content-between thành justify-content-center */}
-            <h1 className={`${styles.title} mb-0 text-center`}>Payment Management</h1> {/* Thêm text-center */}
+          <div className="d-flex justify-content-center align-items-center w-100">
+            <h1 className={`${styles.title} mb-0 text-center`}>Payment Management</h1>
           </div>
         </div>
       </nav>
@@ -273,15 +313,57 @@ const ManagerPayment = () => {
                 </div>
                 
                 <div className="col-md-6">
-                  <label className="form-label">Citizen ID*</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <label className="form-label">Citizen*</label>
+                  <select
+                    className="form-select"
                     name="citizenId"
                     value={formData.citizenId}
                     onChange={handleChange}
                     required
-                  />
+                  >
+                    <option value="">-- Select Citizen --</option>
+                    {citizens.map(citizen => (
+                      <option key={citizen.citizenId} value={citizen.citizenId}>
+                        {citizen.fullName} (ID: {citizen.citizenId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Resident*</label>
+                  <select
+                    className="form-select"
+                    name="residentId"
+                    value={formData.residentId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">-- Select Resident --</option>
+                    {residents.map(resident => (
+                      <option key={resident.residentId} value={resident.residentId}>
+                        {resident.fullName} (ID: {resident.residentId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Accountant*</label>
+                  <select
+                    className="form-select"
+                    name="accountantId"
+                    value={formData.accountantId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">-- Select Accountant --</option>
+                    {accountants.map(accountant => (
+                      <option key={accountant.accountantId} value={accountant.accountantId}>
+                        {accountant.fullName} (ID: {accountant.accountantId})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div className="col-md-6">
@@ -293,10 +375,8 @@ const ManagerPayment = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="">-- Select Status --</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
-                    <option value="Pending">Pending</option>
+                    <option value="UNPAID">Unpaid</option>
+                    <option value="PAID">Paid</option>
                   </select>
                 </div>
                 
@@ -346,54 +426,55 @@ const ManagerPayment = () => {
               <div className="alert alert-info">No payments found.</div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Date</th>
-                      <th>Amount</th>
-                      <th>Citizen ID</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+              <table className="table table-hover align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Collection Name</th>
+                    <th>Collection Date</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map(payment => (
+                    <tr key={payment.paymentId}>
+                      <td>{payment.paymentId}</td>
+                      <td>{payment.cpName}</td>
+                      <td>{payment.collectionDate}</td>
+                      <td>{payment.cost.toLocaleString()} VND</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            payment.status === 'PAID' ? 'bg-success' : 'bg-danger'
+                          }`}
+                        >
+                          {payment.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleEditClick(payment)}
+                          >
+                            <i className="bi bi-pencil"></i> Edit
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDeletePayment(payment.paymentId)}
+                          >
+                            <i className="bi bi-trash"></i> Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map(payment => (
-                      <tr key={payment.paymentId}>
-                        <td>{payment.paymentId}</td>
-                        <td>{payment.cpName}</td>
-                        <td>{new Date(payment.collectionDate).toLocaleDateString()}</td>
-                        <td>{payment.cost.toFixed(2)}</td>
-                        <td>{payment.citizenId}</td>
-                        <td>
-                          <span className={`badge ${
-                            payment.status === 'Paid' ? 'bg-success' : 
-                            payment.status === 'Unpaid' ? 'bg-danger' : 'bg-warning'
-                          }`}>
-                            {payment.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex gap-2">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => handleEditClick(payment)}
-                            >
-                              <i className="bi bi-pencil"></i> Edit
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleDeletePayment(payment.paymentId)}
-                            >
-                              <i className="bi bi-trash"></i> Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  ))}
+                </tbody>
+              </table>
+
+
               </div>
             )}
           </div>

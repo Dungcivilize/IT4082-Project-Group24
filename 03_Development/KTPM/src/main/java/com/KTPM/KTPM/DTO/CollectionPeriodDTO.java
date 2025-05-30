@@ -1,18 +1,25 @@
 package com.KTPM.KTPM.DTO;
 
+import com.KTPM.KTPM.Models.CollectionPeriod;
+
 import java.time.LocalDate;
 
 public class CollectionPeriodDTO {
     private Long cpId;
     private String cpName;
-    private LocalDate collectionDate;
+    private String collectionDate;
+    private Long residentId;
+    private Long accountantId;
 
-    public CollectionPeriodDTO(Long cpId, String cpName, LocalDate collectionDate) {
-        this.cpId = cpId;
-        this.cpName = cpName;
-        this.collectionDate = collectionDate;
+    public CollectionPeriodDTO(CollectionPeriod cp) {
+        this.cpId = cp.getCpId();
+        this.cpName = cp.getCpName();
+        this.collectionDate = cp.getCollectionDate().toString();
+        this.residentId = cp.getResident().getResidentId();
+        this.accountantId = cp.getAccountant().getAccountantId();
     }
 
+    // Getters
     public Long getCpId() {
         return cpId;
     }
@@ -21,7 +28,15 @@ public class CollectionPeriodDTO {
         return cpName;
     }
 
-    public LocalDate getCollectionDate() {
+    public String getCollectionDate() {
         return collectionDate;
+    }
+
+    public Long getResidentId() {
+        return residentId;
+    }
+
+    public Long getAccountantId() {
+        return accountantId;
     }
 }
