@@ -26,6 +26,9 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status = PaymentStatus.UNPAID;
 
+    
+    
+
     // Thêm enum PaymentStatus
     public enum PaymentStatus {
         UNPAID,     // Chưa thanh toán

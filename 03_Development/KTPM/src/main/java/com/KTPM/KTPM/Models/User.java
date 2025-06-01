@@ -1,7 +1,7 @@
 package com.KTPM.KTPM.Models;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
+import java.util.List;
 @Entity
 @Table(name = "users")
 public class User {
@@ -35,6 +35,10 @@ public class User {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Citizen> citizens;
+
 
     // Constructors
     public User() {}

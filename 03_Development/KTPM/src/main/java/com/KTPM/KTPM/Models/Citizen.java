@@ -3,6 +3,7 @@ package com.KTPM.KTPM.Models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "citizen")
@@ -28,6 +29,15 @@ public class Citizen {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "citizen", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    private List<AccommodationInformation> accommodations;
+
+    @OneToMany(mappedBy = "householder", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    private List<Resident> residents;
+
+    @OneToMany(mappedBy = "citizen", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    private List<Payment> payments;
 
     // Constructors
     public Citizen() {}

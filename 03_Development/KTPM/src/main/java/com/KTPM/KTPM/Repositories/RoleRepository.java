@@ -1,7 +1,8 @@
 package com.KTPM.KTPM.Repositories;
 import com.KTPM.KTPM.Models.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, Integer> {
-    // Bạn có thể thêm các truy vấn tuỳ chỉnh tại đây
+    Optional<Role> findByRoleName(String name); 
 }
