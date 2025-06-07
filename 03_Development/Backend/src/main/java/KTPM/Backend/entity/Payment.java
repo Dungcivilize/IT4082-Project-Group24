@@ -3,16 +3,7 @@ package KTPM.Backend.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,6 +14,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payment {
+    public enum PaymentStatus {
+        PAID, UNPAID, PROCESSING
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
@@ -36,21 +31,15 @@ public class Payment {
     private BigDecimal price;
 
     @Column(name = "paid_at", nullable = false)
-    private LocalDateTime paidAt = LocalDateTime.now();
+    private LocalDateTime paidAt;
 
     @Column(name = "transaction_code", length = 50)
     private String transactionCode;
 
-    @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private PaymentStatus status = PaymentStatus.UNPAID;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
-
-    public enum PaymentStatus {
-        PAID,
-        UNPAID,
-        PROCESSING
-    }
 } 

@@ -1,13 +1,6 @@
 package KTPM.Backend.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentPeriod {
+    public enum PaymentPeriodStatus {
+        collecting, completed
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_period_id")
@@ -29,15 +26,10 @@ public class PaymentPeriod {
     @Column(name = "year", nullable = false)
     private Integer year;
 
-    @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private PaymentPeriodStatus status = PaymentPeriodStatus.COLLECTING;
+    @Column(name = "status")
+    private PaymentPeriodStatus status = PaymentPeriodStatus.collecting;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
-
-    public enum PaymentPeriodStatus {
-        COLLECTING,
-        COMPLETED
-    }
 } 

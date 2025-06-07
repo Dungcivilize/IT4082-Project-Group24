@@ -20,6 +20,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceType {
+    public enum ServiceTypeEnum {
+        electricity, water, motorbike, car, management, maintenance
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "service_type_id")
@@ -28,19 +32,10 @@ public class ServiceType {
     @Column(name = "service_name", nullable = false, length = 50)
     private String serviceName;
 
-    @Column(name = "service_type", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "service_type", nullable = false)
     private ServiceTypeEnum serviceType;
 
     @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
-
-    public enum ServiceTypeEnum {
-        ELECTRICITY,
-        WATER,
-        MOTORBIKE,
-        CAR,
-        MANAGEMENT,
-        MAINTENANCE
-    }
 } 

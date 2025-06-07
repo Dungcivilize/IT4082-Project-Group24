@@ -9,8 +9,7 @@ import KTPM.Backend.dto.UserProfileResponse;
 import KTPM.Backend.service.UserProfileService;
 
 @RestController
-@RequestMapping("/api/profile")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/users/profile")
 public class UserProfileController {
     @Autowired
     private UserProfileService userProfileService;

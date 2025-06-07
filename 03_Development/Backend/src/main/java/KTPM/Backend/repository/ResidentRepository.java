@@ -11,4 +11,5 @@ import KTPM.Backend.entity.Resident;
 @Repository
 public interface ResidentRepository extends JpaRepository<Resident, Integer> {
     List<Resident> findByApartment(Apartment apartment);
+    List<Resident> findByApartmentAndResidentType(Apartment apartment, Resident.ResidentType residentType);
 } 

@@ -37,11 +37,11 @@ public class TemporaryResident {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Column(name = "gender", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false)
     private Resident.Gender gender;
 
-    @Column(name = "identity_card", unique = true, length = 20)
+    @Column(name = "identity_card", length = 20, unique = true)
     private String identityCard;
 
     @Column(name = "phone", length = 20)

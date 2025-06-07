@@ -12,7 +12,6 @@ import KTPM.Backend.service.ResidentService;
 
 @RestController
 @RequestMapping("/api/residents")
-@CrossOrigin(origins = "*")
 public class ResidentController {
     @Autowired
     private ResidentService residentService;

@@ -22,6 +22,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Resident {
+    public enum Gender {
+        male, female, other
+    }
+
+    public enum ResidentType {
+        owner, member
+    }
+
+    public enum ResidentStatus {
+        living, moved_out, temporary_absent
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "resident_id")
@@ -37,11 +49,11 @@ public class Resident {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Column(name = "gender", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false)
     private Gender gender;
 
-    @Column(name = "identity_card", unique = true, length = 20)
+    @Column(name = "identity_card", length = 20, unique = true)
     private String identityCard;
 
     @Column(name = "phone", length = 20)
@@ -53,31 +65,14 @@ public class Resident {
     @Column(name = "occupation", length = 100)
     private String occupation;
 
-    @Column(name = "resident_type", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "resident_type", nullable = false)
     private ResidentType residentType;
 
     @Column(name = "relationship", length = 50)
     private String relationship;
 
-    @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private ResidentStatus status = ResidentStatus.living;
-
-    public enum Gender {
-        male,
-        female,
-        other
-    }
-
-    public enum ResidentType {
-        owner,
-        member
-    }
-
-    public enum ResidentStatus {
-        living,
-        moved_out,
-        temporary_absent
-    }
 } 

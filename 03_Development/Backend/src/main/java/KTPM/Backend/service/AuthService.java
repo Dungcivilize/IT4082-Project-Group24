@@ -23,8 +23,10 @@ public class AuthService {
 
         User user = userOpt.get();
         return new LoginResponse(
+            user.getUserId(),
             user.getEmail(),
             user.getFullName(),
+            user.getPhone(),
             user.getRole(),
             user.getApartment() != null ? user.getApartment().getApartmentId() : null
         );
