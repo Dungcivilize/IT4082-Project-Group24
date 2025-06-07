@@ -1,0 +1,51 @@
+ADMIN (Quản trị viên): Tum
+UC1: Quản lý tài khoản người dùng
+UC1.1: Tạo tài khoản (kế toán/chủ hộ)
+UC1.2: Phân quyền người dùng
+UC1.3: Đặt lại mật khẩu
+UC2: Quản lý cư dân
+UC2.1: Thêm/sửa/xóa thông tin cư dân
+UC2.2: Quản lý chủ hộ và thành viên
+UC2.4: Xem đăng ký tạm trú/tạm vắng
+UC2.5: Quản lý đăng ký phương tiện
+UC3: Xem thống kê
+UC3.1: Xem thống kê dân cư (giới tính, độ tuổi, trạng thái)
+UC3.2: Xem thống kê căn hộ (đang ở/trống)
+UC3.3: Xem thống kê phương tiện
+
+
+KẾ TOÁN: Dũng + Đức
+UC4: Quản lý dịch vụ
+UC4.1: Thêm/sửa/xóa loại dịch vụ
+UC4.2: Cập nhật đơn giá dịch vụ
+UC4.3: Quản lý phương thức tính phí
+UC5: Quản lý thu phí
+UC5.1: Tạo kỳ thu phí mới
+UC5.2: Nhập số lượng sử dụng dịch vụ
+UC5.3: Theo dõi trạng thái thanh toán
+UC5.4: Đóng kỳ thu phí
+UC6: Quản lý thanh toán
+UC6.1: Xác nhận thanh toán
+UC6.2: Ghi nhận giao dịch
+UC7: Xem thống kê tài chính
+UC7.1: Xem thống kê theo kỳ thu phí
+UC7.2: Xem thống kê theo loại dịch vụ
+
+
+CƯ DÂN (Chủ hộ): Hoàng + Thành
+UC7: Quản lý thông tin cá nhân
+UC7.1: Xem/cập nhật thông tin cá nhân
+UC7.2: Xem/cập nhật thông tin thành viên trong hộ
+UC7.3: Đổi mật khẩu
+UC8: Quản lý tạm trú/tạm vắng
+UC8.1: Đăng ký tạm trú cho khách
+UC8.2: Đăng ký tạm vắng cho thành viên
+UC8.3: Xem lịch sử tạm trú/tạm vắng
+UC9: Quản lý phương tiện
+UC9.1: Đăng ký phương tiện mới
+UC9.2: Xem danh sách phương tiện đã đăng ký
+UC10: Quản lý thanh toán
+UC10.1: Xem chi tiết các khoản phí
+UC10.2: Thanh toán trực tuyến
+UC10.3: Xem lịch sử thanh toán
+UC10.4: Xem hóa đơn/biên lai
