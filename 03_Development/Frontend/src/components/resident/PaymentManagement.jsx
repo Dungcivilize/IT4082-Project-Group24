@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { API_URL } from '../../constants/api'
 import '../../styles/Resident.css'
+import QRCodeImage from '../../assets/QRCode.jpg'
 
 const PaymentManagement = () => {
   const [activeTab, setActiveTab] = useState('pending')
@@ -125,6 +126,18 @@ const PaymentManagement = () => {
     }
   }
 
+  const getServiceTypeText = (type) => {
+    const serviceTypes = {
+      'water': 'Dịch vụ nước',
+      'electricity': 'Dịch vụ điện',
+      'maintenance': 'Dịch vụ bảo trì',
+      'motorbike': 'Dịch vụ xe máy',
+      'car': 'Dịch vụ xe hơi',
+      'management': 'Dịch vụ quản lý'
+    }
+    return serviceTypes[type] || type
+  }
+
   const renderPaymentCard = (payment) => (
     <div key={payment.paymentDetailId} className="payment-card">
       <div className="payment-header">
@@ -134,7 +147,7 @@ const PaymentManagement = () => {
         </span>
       </div>
       <div className="payment-info">
-        <p>Loại dịch vụ: {payment.serviceType}</p>
+        <p>Loại dịch vụ: {getServiceTypeText(payment.serviceType)}</p>
         <p>Kỳ thu: {payment.periodInfo}</p>
         <p>Số lượng: {payment.amount}</p>
         <p>Đơn giá: {formatCurrency(payment.unitPrice)}</p>
@@ -174,6 +187,10 @@ const PaymentManagement = () => {
             <h3>Thanh toán phí {selectedPayment.serviceName}</h3>
             <p>Kỳ thu: {selectedPayment.periodInfo}</p>
             <p>Tổng tiền: {formatCurrency(selectedPayment.totalPrice)}</p>
+            <div className="qr-code-container">
+              <img src={QRCodeImage} alt="Mã QR thanh toán" className="qr-code-image" />
+              <p className="qr-code-note">Quét mã QR để thanh toán</p>
+            </div>
             <form onSubmit={handleSubmitPayment}>
               <div className="form-group">
                 <label>Mã giao dịch:</label>

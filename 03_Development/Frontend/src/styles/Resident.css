@@ -1126,4 +1126,28 @@ h2 {
 
 .payment-form .cancel-button:hover {
   background-color: #e0e0e0;
+}
+
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.qr-code-image {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.qr-code-note {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+  text-align: center;
 } 
