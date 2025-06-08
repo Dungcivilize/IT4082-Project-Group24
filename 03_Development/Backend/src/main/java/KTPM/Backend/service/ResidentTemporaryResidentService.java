@@ -106,4 +106,50 @@ public class ResidentTemporaryResidentService {
 
         temporaryResidentRepository.delete(temporaryResident);
     }
+
+    public ResidentTemporaryResidentResponse updateTemporaryResident(Integer userId, Integer temporaryResidentId, ResidentTemporaryResidentRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        if (user.getApartment() == null) {
+            throw new RuntimeException("Người dùng chưa được gán căn hộ");
+        }
+
+        TemporaryResident temporaryResident = temporaryResidentRepository.findById(temporaryResidentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin tạm trú"));
+
+        // Kiểm tra xem temporary resident có thuộc căn hộ của user không
+        if (!temporaryResident.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+            throw new RuntimeException("Không có quyền cập nhật thông tin tạm trú này");
+        }
+
+        // Validate dates
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new RuntimeException("Ngày bắt đầu phải trước ngày kết thúc");
+        }
+
+        temporaryResident.setFullName(request.getFullName());
+        temporaryResident.setBirthDate(request.getBirthDate());
+        temporaryResident.setGender(request.getGender());
+        temporaryResident.setIdentityCard(request.getIdentityCard());
+        temporaryResident.setPhone(request.getPhone());
+        temporaryResident.setStartDate(request.getStartDate());
+        temporaryResident.setEndDate(request.getEndDate());
+        temporaryResident.setReason(request.getReason());
+
+        temporaryResident = temporaryResidentRepository.save(temporaryResident);
+
+        return new ResidentTemporaryResidentResponse(
+            temporaryResident.getTemporaryResidentId(),
+            temporaryResident.getFullName(),
+            temporaryResident.getBirthDate(),
+            temporaryResident.getGender(),
+            temporaryResident.getIdentityCard(),
+            temporaryResident.getPhone(),
+            temporaryResident.getStartDate(),
+            temporaryResident.getEndDate(),
+            temporaryResident.getReason(),
+            temporaryResident.getApartment().getApartmentCode()
+        );
+    }
 } 

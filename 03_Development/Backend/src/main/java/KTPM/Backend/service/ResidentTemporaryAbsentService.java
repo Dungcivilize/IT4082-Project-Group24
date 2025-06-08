@@ -124,4 +124,50 @@ public class ResidentTemporaryAbsentService {
 
         temporaryAbsentRepository.delete(temporaryAbsent);
     }
+
+    public ResidentTemporaryAbsentResponse updateTemporaryAbsent(Integer userId, Integer temporaryAbsentId, ResidentTemporaryAbsentRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        if (user.getApartment() == null) {
+            throw new RuntimeException("Người dùng chưa được gán căn hộ");
+        }
+
+        TemporaryAbsent temporaryAbsent = temporaryAbsentRepository.findById(temporaryAbsentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin tạm vắng"));
+
+        // Kiểm tra xem temporary absent có thuộc căn hộ của user không
+        if (!temporaryAbsent.getResident().getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+            throw new RuntimeException("Không có quyền cập nhật thông tin tạm vắng này");
+        }
+
+        // Validate dates
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new RuntimeException("Ngày bắt đầu phải trước ngày kết thúc");
+        }
+
+        // Kiểm tra xem có đang tạm vắng trong khoảng thời gian này không (trừ chính bản ghi này)
+        if (temporaryAbsentRepository.existsByResidentAndDateRangeAndIdNot(
+                temporaryAbsent.getResident(), request.getStartDate(), request.getEndDate(), temporaryAbsentId)) {
+            throw new RuntimeException("Thành viên đã đăng ký tạm vắng trong khoảng thời gian này");
+        }
+
+        temporaryAbsent.setStartDate(request.getStartDate());
+        temporaryAbsent.setEndDate(request.getEndDate());
+        temporaryAbsent.setTemporaryAddress(request.getTemporaryAddress());
+        temporaryAbsent.setReason(request.getReason());
+
+        temporaryAbsent = temporaryAbsentRepository.save(temporaryAbsent);
+
+        return new ResidentTemporaryAbsentResponse(
+            temporaryAbsent.getTemporaryAbsentId(),
+            temporaryAbsent.getResident().getResidentId(),
+            temporaryAbsent.getResident().getFullName(),
+            temporaryAbsent.getResident().getApartment().getApartmentCode(),
+            temporaryAbsent.getStartDate(),
+            temporaryAbsent.getEndDate(),
+            temporaryAbsent.getTemporaryAddress(),
+            temporaryAbsent.getReason()
+        );
+    }
 } 
