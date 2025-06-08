@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import KTPM.Backend.dto.ResidentPaymentDetailResponse;
 import KTPM.Backend.dto.ResidentPaymentRequest;
@@ -14,16 +15,12 @@ import KTPM.Backend.entity.Payment;
 import KTPM.Backend.entity.PaymentDetail;
 import KTPM.Backend.entity.User;
 import KTPM.Backend.repository.PaymentDetailRepository;
-import KTPM.Backend.repository.PaymentRepository;
 import KTPM.Backend.repository.UserRepository;
 
 @Service
 public class ResidentPaymentService {
     @Autowired
     private PaymentDetailRepository paymentDetailRepository;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -46,8 +43,8 @@ public class ResidentPaymentService {
                     // Tính tổng tiền
                     BigDecimal totalPrice = pd.getAmount().multiply(pd.getServiceType().getUnitPrice());
                     
-                    // Lấy thông tin payment nếu có
-                    Payment payment = paymentRepository.findByPaymentDetail(pd).orElse(null);
+                    // Lấy thông tin payment
+                    Payment payment = pd.getPayment();
                     
                     return new ResidentPaymentDetailResponse(
                         pd.getPaymentDetailId(),
@@ -82,8 +79,8 @@ public class ResidentPaymentService {
                     // Tính tổng tiền
                     BigDecimal totalPrice = pd.getAmount().multiply(pd.getServiceType().getUnitPrice());
                     
-                    // Lấy thông tin payment nếu có
-                    Payment payment = paymentRepository.findByPaymentDetail(pd).orElse(null);
+                    // Lấy thông tin payment
+                    Payment payment = pd.getPayment();
                     
                     return new ResidentPaymentDetailResponse(
                         pd.getPaymentDetailId(),
@@ -103,6 +100,7 @@ public class ResidentPaymentService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public ResidentPaymentDetailResponse submitPayment(Integer userId, ResidentPaymentRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -124,9 +122,17 @@ public class ResidentPaymentService {
             throw new RuntimeException("Khoản phí này không ở trạng thái chờ thanh toán");
         }
 
-        // Lấy payment hiện tại
-        Payment payment = paymentRepository.findByPaymentDetail(paymentDetail)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin thanh toán"));
+        // Tính tổng tiền
+        BigDecimal totalPrice = paymentDetail.getAmount().multiply(paymentDetail.getServiceType().getUnitPrice());
+
+        // Tạo hoặc cập nhật payment
+        Payment payment = paymentDetail.getPayment();
+        if (payment == null) {
+            payment = new Payment();
+            payment.setPaymentDetail(paymentDetail);
+            payment.setPrice(totalPrice);
+            paymentDetail.setPayment(payment);
+        }
 
         // Kiểm tra trạng thái payment
         if (payment.getStatus() != Payment.PaymentStatus.UNPAID) {
@@ -138,10 +144,8 @@ public class ResidentPaymentService {
         payment.setPaidAt(LocalDateTime.now());
         payment.setStatus(Payment.PaymentStatus.PROCESSING);
 
-        payment = paymentRepository.save(payment);
-
-        // Tính tổng tiền
-        BigDecimal totalPrice = paymentDetail.getAmount().multiply(paymentDetail.getServiceType().getUnitPrice());
+        // Lưu payment detail (sẽ cascade lưu payment)
+        paymentDetail = paymentDetailRepository.save(paymentDetail);
 
         return new ResidentPaymentDetailResponse(
             paymentDetail.getPaymentDetailId(),

@@ -41,7 +41,8 @@ public class ResidentVehicleService {
                     v.getLicensePlate(),
                     v.getType(),
                     v.getApartment().getApartmentCode(),
-                    v.getOwner().getFullName()
+                    v.getOwner().getFullName(),
+                    v.getOwner().getResidentId()
                 ))
                 .collect(Collectors.toList());
     }
@@ -54,14 +55,18 @@ public class ResidentVehicleService {
             throw new RuntimeException("Người dùng chưa được gán căn hộ");
         }
 
-        // Tìm chủ sở hữu là owner của căn hộ
-        List<Resident> owners = residentRepository.findByApartmentAndResidentType(
-            user.getApartment(), 
-            Resident.ResidentType.owner
-        );
-        
-        if (owners.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy chủ sở hữu của căn hộ");
+        // Tìm chủ xe theo ID
+        Resident owner = residentRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin chủ xe"));
+
+        // Kiểm tra xem chủ xe có thuộc căn hộ không
+        if (!owner.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+            throw new RuntimeException("Chủ xe không thuộc căn hộ này");
+        }
+
+        // Kiểm tra trạng thái của chủ xe
+        if (!"living".equals(owner.getStatus().toString().toLowerCase())) {
+            throw new RuntimeException("Chủ xe không còn ở trong căn hộ");
         }
 
         // Kiểm tra biển số xe đã tồn tại chưa
@@ -73,7 +78,7 @@ public class ResidentVehicleService {
         vehicle.setLicensePlate(request.getLicensePlate());
         vehicle.setType(request.getType());
         vehicle.setApartment(user.getApartment());
-        vehicle.setOwner(owners.get(0)); // Lấy chủ sở hữu đầu tiên
+        vehicle.setOwner(owner);
 
         vehicle = vehicleRepository.save(vehicle);
 
@@ -82,7 +87,8 @@ public class ResidentVehicleService {
             vehicle.getLicensePlate(),
             vehicle.getType(),
             vehicle.getApartment().getApartmentCode(),
-            vehicle.getOwner().getFullName()
+            vehicle.getOwner().getFullName(),
+            vehicle.getOwner().getResidentId()
         );
     }
 
@@ -108,6 +114,24 @@ public class ResidentVehicleService {
             throw new RuntimeException("Biển số xe đã tồn tại trong hệ thống");
         }
 
+        // Tìm chủ xe mới nếu có thay đổi
+        if (request.getOwnerId() != null && !request.getOwnerId().equals(vehicle.getOwner().getResidentId())) {
+            Resident newOwner = residentRepository.findById(request.getOwnerId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin chủ xe"));
+            
+            // Kiểm tra xem chủ xe mới có thuộc căn hộ không
+            if (!newOwner.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+                throw new RuntimeException("Chủ xe không thuộc căn hộ này");
+            }
+
+            // Kiểm tra trạng thái của chủ xe mới
+            if (!"living".equals(newOwner.getStatus().toString().toLowerCase())) {
+                throw new RuntimeException("Chủ xe mới không còn ở trong căn hộ");
+            }
+            
+            vehicle.setOwner(newOwner);
+        }
+
         vehicle.setLicensePlate(request.getLicensePlate());
         vehicle.setType(request.getType());
 
@@ -118,7 +142,8 @@ public class ResidentVehicleService {
             vehicle.getLicensePlate(),
             vehicle.getType(),
             vehicle.getApartment().getApartmentCode(),
-            vehicle.getOwner().getFullName()
+            vehicle.getOwner().getFullName(),
+            vehicle.getOwner().getResidentId()
         );
     }
 

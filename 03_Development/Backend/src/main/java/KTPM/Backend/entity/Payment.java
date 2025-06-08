@@ -24,22 +24,22 @@ public class Payment {
     private Integer paymentId;
 
     @OneToOne
-    @JoinColumn(name = "payment_detail_id", nullable = false)
+    @JoinColumn(name = "payment_detail_id", nullable = false, unique = true)
     private PaymentDetail paymentDetail;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "price", nullable = false)
     private BigDecimal price;
 
     @Column(name = "paid_at", nullable = false)
     private LocalDateTime paidAt;
 
-    @Column(name = "transaction_code", length = 50)
+    @Column(name = "transaction_code")
     private String transactionCode;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     private PaymentStatus status = PaymentStatus.UNPAID;
 
-    @Column(name = "note", columnDefinition = "TEXT")
+    @Column(name = "note")
     private String note;
 } 

@@ -6,12 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class ResidentVehicleResponse {
     private Integer vehicleId;
     private String licensePlate;
     private Vehicle.VehicleType type;
     private String apartmentCode;
     private String ownerName;
+    private Integer ownerId;
 } 

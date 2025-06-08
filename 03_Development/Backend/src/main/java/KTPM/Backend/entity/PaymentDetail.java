@@ -35,13 +35,16 @@ public class PaymentDetail {
     @JoinColumn(name = "service_type_id", nullable = false)
     private ServiceType serviceType;
 
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
+    @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     private PaymentDetailStatus status = PaymentDetailStatus.pending;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToOne(mappedBy = "paymentDetail", cascade = CascadeType.ALL)
+    private Payment payment;
 } 
