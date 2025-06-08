@@ -38,7 +38,7 @@ public class ResidentController {
         }
     }
 
-    @PutMapping("/user/{userId}/resident/{residentId}")
+    @PatchMapping("/user/{userId}/resident/{residentId}")
     public ResponseEntity<?> updateResident(
             @PathVariable Integer userId,
             @PathVariable Integer residentId,

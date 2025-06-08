@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getUserProfile, updateUserProfile } from '../../api/profile'
+import { getResidentsByUser, addResident, updateResident, deleteResident } from '../../api/resident'
 import '../../styles/Resident.css'
 
 const PersonalInfo = () => {
@@ -20,17 +21,21 @@ const PersonalInfo = () => {
   })
   const [showPasswordSection, setShowPasswordSection] = useState(false)
 
-  const [familyMembers, setFamilyMembers] = useState([
-    {
-      id: 1,
-      fullName: 'Nguyễn Văn A',
-      relationship: 'Con',
-      dateOfBirth: '1990-01-01',
-      gender: 'Nam',
-      phone: '0123456789',
-      idCard: '123456789'
-    }
-  ])
+  const [residents, setResidents] = useState([])
+  const [isAddingResident, setIsAddingResident] = useState(false)
+  const [editingResidentId, setEditingResidentId] = useState(null)
+  const [residentFormData, setResidentFormData] = useState({
+    fullName: '',
+    birthDate: '',
+    gender: 'male',
+    identityCard: '',
+    phone: '',
+    email: '',
+    occupation: '',
+    residentType: 'member',
+    relationship: '',
+    status: 'living'
+  })
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -48,6 +53,9 @@ const PersonalInfo = () => {
           fullName: profile.fullName,
           phone: profile.phone
         })
+
+        const residentsData = await getResidentsByUser(user.userId)
+        setResidents(residentsData)
       } catch (error) {
         setError('Có lỗi khi tải thông tin người dùng')
       }
@@ -72,7 +80,6 @@ const PersonalInfo = () => {
         phone: userProfile.phone
       }
 
-      // Thêm thông tin mật khẩu nếu đang thay đổi mật khẩu
       if (showPasswordSection && passwordData.currentPassword && passwordData.newPassword) {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
           setError('Mật khẩu mới không khớp')
@@ -113,162 +120,515 @@ const PersonalInfo = () => {
     })
   }
 
+  const handleAddResident = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    try {
+      const response = await addResident(userProfile.userId, residentFormData)
+      setResidents([...residents, response])
+      setSuccess('Thêm thành viên thành công')
+      setIsAddingResident(false)
+      resetFormData()
+    } catch (error) {
+      setError(error.toString())
+    }
+  }
+
+  const handleUpdateResident = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    try {
+      const response = await updateResident(userProfile.userId, editingResidentId, residentFormData)
+      setResidents(residents.map(resident => 
+        resident.residentId === editingResidentId ? response : resident
+      ))
+      setSuccess('Cập nhật thông tin thành công')
+      setEditingResidentId(null)
+      resetFormData()
+    } catch (error) {
+      setError(error.toString())
+    }
+  }
+
+  const handleDeleteResident = async (residentId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
+      return
+    }
+
+    setError('')
+    setSuccess('')
+
+    try {
+      await deleteResident(userProfile.userId, residentId)
+      setResidents(residents.filter(resident => resident.residentId !== residentId))
+      setSuccess('Xóa thành viên thành công')
+    } catch (error) {
+      setError(error.toString())
+    }
+  }
+
+  const resetFormData = () => {
+    setResidentFormData({
+      fullName: '',
+      birthDate: '',
+      gender: 'male',
+      identityCard: '',
+      phone: '',
+      email: '',
+      occupation: '',
+      residentType: 'member',
+      relationship: '',
+      status: 'living'
+    })
+  }
+
+  const cancelResidentForm = () => {
+    setIsAddingResident(false)
+    setEditingResidentId(null)
+    resetFormData()
+  }
+
+  const startEditResident = (resident) => {
+    setEditingResidentId(resident.residentId)
+    setResidentFormData({
+      fullName: resident.fullName,
+      birthDate: resident.birthDate,
+      gender: resident.gender,
+      identityCard: resident.identityCard,
+      phone: resident.phone,
+      email: resident.email,
+      occupation: resident.occupation,
+      residentType: resident.residentType,
+      relationship: resident.relationship,
+      status: resident.status
+    })
+  }
+
+  const handleResidentChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Xử lý đặc biệt cho trường birthDate
+    if (name === 'birthDate') {
+      // Đảm bảo ngày được format theo chuẩn ISO (YYYY-MM-DD)
+      const dateValue = value ? new Date(value).toISOString().split('T')[0] : '';
+      setResidentFormData({
+        ...residentFormData,
+        [name]: dateValue
+      });
+    } else {
+      setResidentFormData({
+        ...residentFormData,
+        [name]: value
+      });
+    }
+  };
+
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    // Chuyển đổi từ ISO date string sang định dạng hiển thị DD/MM/YYYY
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const ResidentForm = ({ onSubmit, isEditing }) => (
+    <form onSubmit={onSubmit} className="resident-form">
+      <div className="form-row">
+        <div className="form-group">
+          <label>Họ và tên:</label>
+          <input
+            type="text"
+            name="fullName"
+            value={residentFormData.fullName}
+            onChange={handleResidentChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Ngày sinh:</label>
+          <input
+            type="date"
+            name="birthDate"
+            value={residentFormData.birthDate || ''}
+            onChange={handleResidentChange}
+            max={new Date().toISOString().split('T')[0]} // Giới hạn không cho chọn ngày trong tương lai
+            required
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Giới tính:</label>
+          <select
+            name="gender"
+            value={residentFormData.gender}
+            onChange={handleResidentChange}
+          >
+            <option value="male">Nam</option>
+            <option value="female">Nữ</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>CMND/CCCD:</label>
+          <input
+            type="text"
+            name="identityCard"
+            value={residentFormData.identityCard}
+            onChange={handleResidentChange}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Số điện thoại:</label>
+          <input
+            type="tel"
+            name="phone"
+            value={residentFormData.phone}
+            onChange={handleResidentChange}
+          />
+        </div>
+        <div className="form-group">
+          <label>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={residentFormData.email}
+            onChange={handleResidentChange}
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Nghề nghiệp:</label>
+          <input
+            type="text"
+            name="occupation"
+            value={residentFormData.occupation}
+            onChange={handleResidentChange}
+          />
+        </div>
+        <div className="form-group">
+          <label>Loại cư dân:</label>
+          <select
+            name="residentType"
+            value={residentFormData.residentType}
+            onChange={handleResidentChange}
+          >
+            <option value="owner">Chủ hộ</option>
+            <option value="member">Thành viên</option>
+          </select>
+        </div>
+      </div>
+
+      {residentFormData.residentType === 'member' && (
+        <div className="form-group">
+          <label>Quan hệ với chủ hộ:</label>
+          <input
+            type="text"
+            name="relationship"
+            value={residentFormData.relationship}
+            onChange={handleResidentChange}
+            required
+          />
+        </div>
+      )}
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Trạng thái:</label>
+          <select
+            name="status"
+            value={residentFormData.status}
+            onChange={handleResidentChange}
+          >
+            <option value="living">Đang sinh sống</option>
+            <option value="moved_out">Đã chuyển đi</option>
+            <option value="temporary_absent">Tạm vắng</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="button-row">
+        <button type="submit" className="save-button">
+          {isEditing ? 'Cập nhật' : 'Thêm thành viên'}
+        </button>
+        <button type="button" className="cancel-button" onClick={cancelResidentForm}>
+          Hủy
+        </button>
+      </div>
+    </form>
+  )
+
   return (
-    <div className="personal-info">
+    <div className="personal-info-container">
       <div className="tabs">
-        <button
+        <button 
           className={`tab ${activeTab === 'owner' ? 'active' : ''}`}
           onClick={() => setActiveTab('owner')}
         >
           Thông tin chủ hộ
         </button>
-        <button
+        <button 
           className={`tab ${activeTab === 'members' ? 'active' : ''}`}
           onClick={() => setActiveTab('members')}
         >
-          Thành viên trong hộ
+          Thông tin thành viên
         </button>
       </div>
 
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
+
       {activeTab === 'owner' && (
-        <div className="account-info">
-          <h2>Thông tin tài khoản</h2>
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-          
-          {!isEditing ? (
-            <>
-              <div className="account-info-row">
-                <div className="info-item">
-                  <label>Họ và tên:</label>
-                  <span>{userProfile.fullName}</span>
-                </div>
-                <div className="info-item">
-                  <label>Email:</label>
-                  <span>{userProfile.email}</span>
-                </div>
-                <div className="info-item">
-                  <label>Số điện thoại:</label>
-                  <span>{userProfile.phone}</span>
-                </div>
-              </div>
-              <div className="button-row">
-                <button className="edit-button" onClick={() => setIsEditing(true)}>
-                  Chỉnh sửa thông tin
-                </button>
-              </div>
-            </>
-          ) : (
-            <form onSubmit={handleUpdateProfile}>
-              <div className="form-section">
-                <h3>Thông tin cá nhân</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Họ và tên:</label>
-                    <input
-                      type="text"
-                      value={userProfile.fullName}
-                      disabled
-                      className="disabled-input"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Email:</label>
-                    <input
-                      type="email"
-                      value={userProfile.email}
-                      onChange={(e) => setUserProfile({...userProfile, email: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Số điện thoại:</label>
-                    <input
-                      type="tel"
-                      value={userProfile.phone}
-                      onChange={(e) => setUserProfile({...userProfile, phone: e.target.value})}
-                    />
-                  </div>
-                </div>
-              </div>
+        <div className="profile-section">
+          <form onSubmit={handleUpdateProfile}>
+            <div className="form-group">
+              <label>Email:</label>
+              <input
+                type="email"
+                value={userProfile.email}
+                onChange={(e) => setUserProfile({...userProfile, email: e.target.value})}
+                disabled={!isEditing}
+              />
+            </div>
+            <div className="form-group">
+              <label>Họ và tên:</label>
+              <input
+                type="text"
+                value={userProfile.fullName}
+                disabled
+              />
+            </div>
+            <div className="form-group">
+              <label>Số điện thoại:</label>
+              <input
+                type="tel"
+                value={userProfile.phone}
+                onChange={(e) => setUserProfile({...userProfile, phone: e.target.value})}
+                disabled={!isEditing}
+              />
+            </div>
 
-              <div className="form-section">
-                <div className="password-header">
-                  <h3>Đổi mật khẩu</h3>
-                  <button 
-                    type="button" 
-                    className="toggle-password-button"
-                    onClick={() => setShowPasswordSection(!showPasswordSection)}
-                  >
-                    {showPasswordSection ? 'Ẩn' : 'Hiện'}
+            {showPasswordSection && (
+              <>
+                <div className="form-group">
+                  <label>Mật khẩu hiện tại:</label>
+                  <input
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Mật khẩu mới:</label>
+                  <input
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Xác nhận mật khẩu mới:</label>
+                  <input
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="button-group">
+              {!isEditing ? (
+                <button type="button" onClick={() => setIsEditing(true)}>
+                  Chỉnh sửa
+                </button>
+              ) : (
+                <>
+                  {!showPasswordSection && (
+                    <button type="button" onClick={() => setShowPasswordSection(true)}>
+                      Đổi mật khẩu
+                    </button>
+                  )}
+                  <button type="submit">Lưu thay đổi</button>
+                  <button type="button" onClick={handleCancel}>
+                    Hủy
                   </button>
+                </>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+
+      {activeTab === 'members' && (
+        <div className="members-section">
+          {!isAddingResident && !editingResidentId && (
+            <button onClick={() => setIsAddingResident(true)} className="add-button">
+              Thêm thành viên
+            </button>
+          )}
+
+          {(isAddingResident || editingResidentId) && (
+            <form onSubmit={editingResidentId ? handleUpdateResident : handleAddResident} className="resident-form">
+              <div className="form-group">
+                <label>Họ và tên:</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={residentFormData.fullName}
+                  onChange={handleResidentChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Ngày sinh:</label>
+                <input
+                  type="date"
+                  name="birthDate"
+                  value={residentFormData.birthDate || ''}
+                  onChange={handleResidentChange}
+                  max={new Date().toISOString().split('T')[0]} // Giới hạn không cho chọn ngày trong tương lai
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Giới tính:</label>
+                <select
+                  name="gender"
+                  value={residentFormData.gender}
+                  onChange={handleResidentChange}
+                >
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>CCCD/CMND:</label>
+                <input
+                  type="text"
+                  name="identityCard"
+                  value={residentFormData.identityCard}
+                  onChange={handleResidentChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Số điện thoại:</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={residentFormData.phone}
+                  onChange={handleResidentChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Email:</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={residentFormData.email}
+                  onChange={handleResidentChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Nghề nghiệp:</label>
+                <input
+                  type="text"
+                  name="occupation"
+                  value={residentFormData.occupation}
+                  onChange={handleResidentChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Loại cư dân:</label>
+                <select
+                  name="residentType"
+                  value={residentFormData.residentType}
+                  onChange={handleResidentChange}
+                >
+                  <option value="owner">Chủ hộ</option>
+                  <option value="member">Thành viên</option>
+                </select>
+              </div>
+              
+              {residentFormData.residentType === 'member' && (
+                <div className="form-group">
+                  <label>Quan hệ với chủ hộ:</label>
+                  <input
+                    type="text"
+                    name="relationship"
+                    value={residentFormData.relationship}
+                    onChange={handleResidentChange}
+                    required
+                  />
                 </div>
-                
-                {showPasswordSection && (
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Mật khẩu hiện tại:</label>
-                      <input
-                        type="password"
-                        value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Mật khẩu mới:</label>
-                      <input
-                        type="password"
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Xác nhận mật khẩu mới:</label>
-                      <input
-                        type="password"
-                        value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                )}
+              )}
+
+              <div className="form-group">
+                <label>Trạng thái:</label>
+                <select
+                  name="status"
+                  value={residentFormData.status}
+                  onChange={handleResidentChange}
+                >
+                  <option value="living">Đang sinh sống</option>
+                  <option value="moved_out">Đã chuyển đi</option>
+                  <option value="temporary_absent">Tạm vắng</option>
+                </select>
               </div>
 
-              <div className="button-row">
-                <button type="submit" className="save-button">
-                  Lưu thay đổi
+              <div className="button-group">
+                <button type="submit">
+                  {editingResidentId ? 'Cập nhật' : 'Thêm'}
                 </button>
-                <button type="button" className="cancel-button" onClick={handleCancel}>
+                <button type="button" onClick={cancelResidentForm}>
                   Hủy
                 </button>
               </div>
             </form>
           )}
-        </div>
-      )}
 
-      {activeTab === 'members' && (
-        <div className="members-info">
-          <h2>Thành viên trong hộ</h2>
-          <div className="members-list">
-            {familyMembers.map(member => (
-              <div key={member.id} className="member-card">
-                <h3>{member.fullName}</h3>
-                <div className="member-details">
-                  <p><strong>Quan hệ:</strong> {member.relationship}</p>
-                  <p><strong>Ngày sinh:</strong> {member.dateOfBirth}</p>
-                  <p><strong>Giới tính:</strong> {member.gender}</p>
-                  <p><strong>Số điện thoại:</strong> {member.phone}</p>
-                  <p><strong>CMND/CCCD:</strong> {member.idCard}</p>
-                </div>
-                <div className="member-actions">
-                  <button className="edit-button">Chỉnh sửa</button>
-                  <button className="delete-button">Xóa</button>
+          <div className="residents-list">
+            {residents.map(resident => (
+              <div key={resident.residentId} className="resident-card">
+                <h3>{resident.fullName}</h3>
+                <p>Ngày sinh: {formatDateForDisplay(resident.birthDate)}</p>
+                <p>Giới tính: {resident.gender === 'male' ? 'Nam' : resident.gender === 'female' ? 'Nữ' : 'Khác'}</p>
+                <p>CCCD/CMND: {resident.identityCard}</p>
+                <p>Số điện thoại: {resident.phone}</p>
+                <p>Email: {resident.email}</p>
+                <p>Nghề nghiệp: {resident.occupation}</p>
+                <p>Loại cư dân: {resident.residentType === 'owner' ? 'Chủ hộ' : 'Thành viên'}</p>
+                {resident.residentType === 'member' && (
+                  <p>Quan hệ với chủ hộ: {resident.relationship}</p>
+                )}
+                <p>Trạng thái: {
+                  resident.status === 'living' ? 'Đang sinh sống' : 
+                  resident.status === 'moved_out' ? 'Đã chuyển đi' : 
+                  'Tạm vắng'
+                }</p>
+                
+                <div className="button-group">
+                  <button onClick={() => startEditResident(resident)}>Sửa</button>
+                  <button onClick={() => handleDeleteResident(resident.residentId)}>Xóa</button>
                 </div>
               </div>
             ))}
-            <button className="add-member-button">
-              <i className="fas fa-plus"></i> Thêm thành viên
-            </button>
           </div>
         </div>
       )}
