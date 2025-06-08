@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,6 +44,14 @@ public class ResidentTemporaryController {
         return ResponseEntity.ok(temporaryResidentService.registerTemporaryResident(userId, request));
     }
 
+    @PatchMapping("/residents/{temporaryResidentId}")
+    public ResponseEntity<ResidentTemporaryResidentResponse> updateTemporaryResident(
+            @RequestParam Integer userId,
+            @PathVariable Integer temporaryResidentId,
+            @RequestBody ResidentTemporaryResidentRequest request) {
+        return ResponseEntity.ok(temporaryResidentService.updateTemporaryResident(userId, temporaryResidentId, request));
+    }
+
     // Tạm vắng
     @GetMapping("/absents")
     public ResponseEntity<List<ResidentTemporaryAbsentResponse>> getTemporaryAbsents(
@@ -56,6 +65,14 @@ public class ResidentTemporaryController {
             @PathVariable Integer residentId,
             @RequestBody ResidentTemporaryAbsentRequest request) {
         return ResponseEntity.ok(temporaryAbsentService.registerTemporaryAbsent(userId, residentId, request));
+    }
+
+    @PatchMapping("/absents/{temporaryAbsentId}")
+    public ResponseEntity<ResidentTemporaryAbsentResponse> updateTemporaryAbsent(
+            @RequestParam Integer userId,
+            @PathVariable Integer temporaryAbsentId,
+            @RequestBody ResidentTemporaryAbsentRequest request) {
+        return ResponseEntity.ok(temporaryAbsentService.updateTemporaryAbsent(userId, temporaryAbsentId, request));
     }
 
     @DeleteMapping("/absents/{temporaryAbsentId}")

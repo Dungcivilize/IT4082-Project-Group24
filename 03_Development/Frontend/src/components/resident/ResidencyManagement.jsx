@@ -17,6 +17,10 @@ const ResidencyManagement = () => {
   const [visibleTemporaryResidents, setVisibleTemporaryResidents] = useState(5)
   const [visibleTemporaryAbsents, setVisibleTemporaryAbsents] = useState(5)
 
+  // State cho việc chỉnh sửa
+  const [editingTemporaryResident, setEditingTemporaryResident] = useState(null)
+  const [editingTemporaryAbsent, setEditingTemporaryAbsent] = useState(null)
+
   // Form cho đăng ký tạm trú
   const [temporaryResidentForm, setTemporaryResidentForm] = useState({
     fullName: '',
@@ -201,6 +205,134 @@ const ResidencyManagement = () => {
     return date.toLocaleDateString('vi-VN')
   }
 
+  const handleEditTemporaryResident = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    try {
+      const user = JSON.parse(localStorage.getItem('user'))
+      if (!user?.userId) {
+        setError('Vui lòng đăng nhập để sử dụng tính năng này')
+        return
+      }
+
+      // Format lại ngày tháng trước khi gửi
+      const formattedData = {
+        ...temporaryResidentForm,
+        birthDate: temporaryResidentForm.birthDate ? new Date(temporaryResidentForm.birthDate).toISOString().split('T')[0] : null,
+        startDate: temporaryResidentForm.startDate ? new Date(temporaryResidentForm.startDate).toISOString().split('T')[0] : null,
+        endDate: temporaryResidentForm.endDate ? new Date(temporaryResidentForm.endDate).toISOString().split('T')[0] : null
+      }
+
+      await axios.patch(
+        `${API_URL}/residents/temporary/residents/${editingTemporaryResident}?userId=${user.userId}`,
+        formattedData
+      )
+      
+      setSuccess('Cập nhật thông tin tạm trú thành công')
+      setEditingTemporaryResident(null)
+      setTemporaryResidentForm({
+        fullName: '',
+        birthDate: '',
+        gender: 'male',
+        identityCard: '',
+        phone: '',
+        startDate: '',
+        endDate: '',
+        reason: ''
+      })
+      loadData()
+    } catch (error) {
+      setError(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin tạm trú')
+    }
+  }
+
+  const handleEditTemporaryAbsent = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    try {
+      const user = JSON.parse(localStorage.getItem('user'))
+      if (!user?.userId) {
+        setError('Vui lòng đăng nhập để sử dụng tính năng này')
+        return
+      }
+
+      // Format lại ngày tháng trước khi gửi
+      const formattedData = {
+        ...temporaryAbsentForm,
+        startDate: temporaryAbsentForm.startDate ? new Date(temporaryAbsentForm.startDate).toISOString().split('T')[0] : null,
+        endDate: temporaryAbsentForm.endDate ? new Date(temporaryAbsentForm.endDate).toISOString().split('T')[0] : null
+      }
+
+      await axios.patch(
+        `${API_URL}/residents/temporary/absents/${editingTemporaryAbsent}?userId=${user.userId}`,
+        formattedData
+      )
+      
+      setSuccess('Cập nhật thông tin tạm vắng thành công')
+      setEditingTemporaryAbsent(null)
+      setTemporaryAbsentForm({
+        startDate: '',
+        endDate: '',
+        temporaryAddress: '',
+        reason: ''
+      })
+      loadData()
+    } catch (error) {
+      setError(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin tạm vắng')
+    }
+  }
+
+  const startEditingTemporaryResident = (tr) => {
+    setEditingTemporaryResident(tr.temporaryResidentId)
+    setTemporaryResidentForm({
+      fullName: tr.fullName,
+      birthDate: tr.birthDate ? new Date(tr.birthDate).toISOString().split('T')[0] : '',
+      gender: tr.gender,
+      identityCard: tr.identityCard,
+      phone: tr.phone,
+      startDate: tr.startDate ? new Date(tr.startDate).toISOString().split('T')[0] : '',
+      endDate: tr.endDate ? new Date(tr.endDate).toISOString().split('T')[0] : '',
+      reason: tr.reason
+    })
+    setActiveTab('temporary-residence')
+  }
+
+  const startEditingTemporaryAbsent = (ta) => {
+    setEditingTemporaryAbsent(ta.temporaryAbsentId)
+    setTemporaryAbsentForm({
+      startDate: ta.startDate ? new Date(ta.startDate).toISOString().split('T')[0] : '',
+      endDate: ta.endDate ? new Date(ta.endDate).toISOString().split('T')[0] : '',
+      temporaryAddress: ta.temporaryAddress,
+      reason: ta.reason
+    })
+    setActiveTab('temporary-absence')
+  }
+
+  const cancelEditing = () => {
+    setEditingTemporaryResident(null)
+    setEditingTemporaryAbsent(null)
+    setTemporaryResidentForm({
+      fullName: '',
+      birthDate: '',
+      gender: 'male',
+      identityCard: '',
+      phone: '',
+      startDate: '',
+      endDate: '',
+      reason: ''
+    })
+    setTemporaryAbsentForm({
+      startDate: '',
+      endDate: '',
+      temporaryAddress: '',
+      reason: ''
+    })
+  }
+
   return (
     <div className="residency-management">
       <h2>Quản lý tạm trú/tạm vắng</h2>
@@ -213,13 +345,13 @@ const ResidencyManagement = () => {
           className={`tab ${activeTab === 'temporary-residence' ? 'active' : ''}`}
           onClick={() => setActiveTab('temporary-residence')}
         >
-          Đăng ký tạm trú
+          {editingTemporaryResident ? 'Chỉnh sửa tạm trú' : 'Đăng ký tạm trú'}
         </button>
         <button
           className={`tab ${activeTab === 'temporary-absence' ? 'active' : ''}`}
           onClick={() => setActiveTab('temporary-absence')}
         >
-          Đăng ký tạm vắng
+          {editingTemporaryAbsent ? 'Chỉnh sửa tạm vắng' : 'Đăng ký tạm vắng'}
         </button>
         <button
           className={`tab ${activeTab === 'history' ? 'active' : ''}`}
@@ -231,7 +363,7 @@ const ResidencyManagement = () => {
 
       <div className="tab-content">
         {activeTab === 'temporary-residence' && (
-          <form onSubmit={handleTemporaryResidentSubmit} className="residency-form">
+          <form onSubmit={editingTemporaryResident ? handleEditTemporaryResident : handleTemporaryResidentSubmit} className="residency-form">
             <div className="form-group">
               <label>Họ và tên:</label>
               <input
@@ -305,29 +437,38 @@ const ResidencyManagement = () => {
                 required
               />
             </div>
-            <button type="submit" className="submit-button">
-              Đăng ký tạm trú
-            </button>
+            <div className="button-group">
+              <button type="submit" className="submit-button">
+                {editingTemporaryResident ? 'Cập nhật' : 'Đăng ký tạm trú'}
+              </button>
+              {editingTemporaryResident && (
+                <button type="button" className="cancel-button" onClick={cancelEditing}>
+                  Hủy
+                </button>
+              )}
+            </div>
           </form>
         )}
 
         {activeTab === 'temporary-absence' && (
-          <form onSubmit={handleTemporaryAbsentSubmit} className="residency-form">
-            <div className="form-group">
-              <label>Chọn thành viên:</label>
-              <select
-                value={selectedResident}
-                onChange={(e) => setSelectedResident(e.target.value)}
-                required
-              >
-                <option value="">-- Chọn thành viên --</option>
-                {Array.isArray(residents) && residents.map(resident => (
-                  <option key={resident.residentId} value={resident.residentId}>
-                    {resident.fullName}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <form onSubmit={editingTemporaryAbsent ? handleEditTemporaryAbsent : handleTemporaryAbsentSubmit} className="residency-form">
+            {!editingTemporaryAbsent && (
+              <div className="form-group">
+                <label>Chọn thành viên:</label>
+                <select
+                  value={selectedResident}
+                  onChange={(e) => setSelectedResident(e.target.value)}
+                  required
+                >
+                  <option value="">-- Chọn thành viên --</option>
+                  {Array.isArray(residents) && residents.map(resident => (
+                    <option key={resident.residentId} value={resident.residentId}>
+                      {resident.fullName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="form-group">
               <label>Ngày bắt đầu:</label>
               <input
@@ -363,9 +504,16 @@ const ResidencyManagement = () => {
                 required
               />
             </div>
-            <button type="submit" className="submit-button">
-              Đăng ký tạm vắng
-            </button>
+            <div className="button-group">
+              <button type="submit" className="submit-button">
+                {editingTemporaryAbsent ? 'Cập nhật' : 'Đăng ký tạm vắng'}
+              </button>
+              {editingTemporaryAbsent && (
+                <button type="button" className="cancel-button" onClick={cancelEditing}>
+                  Hủy
+                </button>
+              )}
+            </div>
           </form>
         )}
 
@@ -403,6 +551,12 @@ const ResidencyManagement = () => {
                           <p>Số điện thoại: {tr.phone}</p>
                           <p>Thời gian: {formatDate(tr.startDate)} - {formatDate(tr.endDate)}</p>
                           <p>Lý do: {tr.reason}</p>
+                          <button 
+                            onClick={() => startEditingTemporaryResident(tr)}
+                            className="edit-button"
+                          >
+                            Chỉnh sửa
+                          </button>
                         </div>
                       ))}
                       {temporaryResidents.length > visibleTemporaryResidents && (
@@ -433,12 +587,20 @@ const ResidencyManagement = () => {
                           <p>Địa chỉ tạm trú: {ta.temporaryAddress}</p>
                           <p>Thời gian: {formatDate(ta.startDate)} - {formatDate(ta.endDate)}</p>
                           <p>Lý do: {ta.reason}</p>
-                          <button 
-                            onClick={() => handleDeleteTemporaryAbsent(ta.temporaryAbsentId)}
-                            className="delete-button"
-                          >
-                            Xóa
-                          </button>
+                          <div className="button-group">
+                            <button 
+                              onClick={() => startEditingTemporaryAbsent(ta)}
+                              className="edit-button"
+                            >
+                              Chỉnh sửa
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteTemporaryAbsent(ta.temporaryAbsentId)}
+                              className="delete-button"
+                            >
+                              Xóa
+                            </button>
+                          </div>
                         </div>
                       ))}
                       {temporaryAbsents.length > visibleTemporaryAbsents && (
