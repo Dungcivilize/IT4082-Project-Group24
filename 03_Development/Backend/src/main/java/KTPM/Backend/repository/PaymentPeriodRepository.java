@@ -7,4 +7,5 @@ import KTPM.Backend.entity.PaymentPeriod;
 
 @Repository
 public interface PaymentPeriodRepository extends JpaRepository<PaymentPeriod, Integer> {
+    boolean existsByMonthAndYear(Integer month, Integer year);
 } 

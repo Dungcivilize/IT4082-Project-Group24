@@ -2,6 +2,8 @@ package KTPM.Backend.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,10 +14,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Data
+@NoArgsConstructor
 public class User {
     public enum Role {
         admin, accountant, resident
@@ -26,19 +30,19 @@ public class User {
     @Column(name = "user_id")
     private Integer userId;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "full_name", nullable = false, length = 100)
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(name = "email", length = 100)
+    @Column(name = "email")
     private String email;
 
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone")
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -46,5 +50,6 @@ public class User {
     private Role role = Role.resident;
 
     @OneToMany(mappedBy = "user")
-    private List<ApartmentOwnership> ownerships;
+    @JsonManagedReference(value = "user-ownerships")
+    private java.util.List<ApartmentOwnership> ownerships;
 } 

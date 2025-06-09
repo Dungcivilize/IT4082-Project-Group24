@@ -1,0 +1,14 @@
+.payment-period-management {
+  padding: 24px;
+}
+
+.payment-period-management .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.payment-period-management h2 {
+  margin: 0;
+} 

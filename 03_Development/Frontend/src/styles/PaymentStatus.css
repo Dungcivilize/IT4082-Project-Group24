@@ -1,0 +1,156 @@
+.payment-status-container {
+  padding: 20px;
+}
+
+.payment-status-container h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-weight: 500;
+  color: #666;
+}
+
+.payments-list {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.status.unpaid {
+  background-color: #fff3e0;
+  color: #ff9800;
+}
+
+.status.processing {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.status.paid {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.approve-button, .reject-button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.approve-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.approve-button:hover {
+  background-color: #43a047;
+}
+
+.reject-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.reject-button:hover {
+  background-color: #e53935;
+}
+
+.approve-button:disabled, .reject-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.payment-detail-info {
+  margin-bottom: 20px;
+}
+
+.note-input {
+  margin-top: 16px;
+}
+
+.note-input label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+} 

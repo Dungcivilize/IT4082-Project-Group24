@@ -1169,4 +1169,13 @@ h2 {
 
 .history-item .delete-button:hover {
   background-color: #da190b;
+}
+
+.payment-note.warning {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-top: 8px;
+  border-left: 4px solid #d32f2f;
 } 

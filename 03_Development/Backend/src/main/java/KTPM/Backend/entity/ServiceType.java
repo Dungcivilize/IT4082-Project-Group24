@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,10 +17,14 @@ import lombok.NoArgsConstructor;
 @Table(name = "service_type")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ServiceType {
-    public enum ServiceTypeEnum {
-        electricity, water, motorbike, car, management, maintenance
+    public enum Type {
+        electricity,
+        water,
+        motorbike,
+        car,
+        management,
+        maintenance
     }
 
     @Id
@@ -29,13 +32,45 @@ public class ServiceType {
     @Column(name = "service_type_id")
     private Integer serviceTypeId;
 
-    @Column(name = "service_name", nullable = false, length = 50)
+    @Column(name = "service_name", nullable = false)
     private String serviceName;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "service_type", nullable = false)
-    private ServiceTypeEnum serviceType;
+    private Type serviceType;
 
-    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "unit_price", nullable = false)
     private BigDecimal unitPrice;
+
+    public Integer getServiceTypeId() {
+        return serviceTypeId;
+    }
+
+    public void setServiceTypeId(Integer serviceTypeId) {
+        this.serviceTypeId = serviceTypeId;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public Type getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(Type serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
+    }
 } 
