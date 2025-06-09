@@ -1,6 +1,7 @@
 package KTPM.Backend.entity;
 
 import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Apartment {
-    public enum ApartmentStatus {
+    public enum Status {
         occupied, empty
     }
 
@@ -21,16 +22,16 @@ public class Apartment {
     @Column(name = "apartment_id")
     private Integer apartmentId;
 
-    @Column(name = "apartment_code", nullable = false, length = 10, unique = true)
+    @Column(name = "apartment_code", nullable = false, unique = true, length = 10)
     private String apartmentCode;
 
-    @Column(name = "floor", nullable = false)
+    @Column(nullable = false)
     private Integer floor;
 
-    @Column(name = "area", precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal area;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private ApartmentStatus status = ApartmentStatus.empty;
+    private Status status = Status.empty;
 } 

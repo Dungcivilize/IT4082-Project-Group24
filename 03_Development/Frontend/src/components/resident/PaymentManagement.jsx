@@ -1,148 +1,167 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import { API_URL } from '../../constants/api'
-import '../../styles/Resident.css'
-import QRCodeImage from '../../assets/QRCode.jpg'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_URL } from '../../constants/api';
+import '../../styles/Resident.css';
+import QRCodeImage from '../../assets/QRCode.jpg';
 
 const PaymentManagement = () => {
-  const [activeTab, setActiveTab] = useState('pending')
-  const [pendingPayments, setPendingPayments] = useState([])
-  const [paymentHistory, setPaymentHistory] = useState([])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [selectedPayment, setSelectedPayment] = useState(null)
-  const [transactionCode, setTransactionCode] = useState('')
+  const [activeTab, setActiveTab] = useState('pending');
+  const [pendingPayments, setPendingPayments] = useState([]);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [transactionCode, setTransactionCode] = useState('');
 
   useEffect(() => {
-    loadPendingPayments()
-    loadPaymentHistory()
-  }, [])
+    loadPendingPayments();
+    loadPaymentHistory();
+  }, []);
 
   const loadPendingPayments = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('user'))
+      const user = JSON.parse(localStorage.getItem('user'));
       if (!user?.userId) {
-        setError('Vui lòng đăng nhập để sử dụng tính năng này')
-        return
+        setError('Vui lòng đăng nhập để sử dụng tính năng này');
+        return;
       }
 
-      const response = await axios.get(`${API_URL}/residents/payments/pending?userId=${user.userId}`)
+      const response = await axios.get(
+        `${API_URL}/residents/payments/pending?userId=${user.userId}`
+      );
       // Lọc ra các khoản phí chưa thanh toán hoặc đang xử lý
-      const pendingPayments = response.data.filter(payment => 
-        payment.paymentStatus === 'UNPAID' || payment.paymentStatus === 'PROCESSING'
-      )
-      setPendingPayments(pendingPayments)
-      setError('')
+      const pendingPayments = response.data.filter(
+        (payment) =>
+          payment.paymentStatus === 'UNPAID' ||
+          payment.paymentStatus === 'PROCESSING'
+      );
+      setPendingPayments(pendingPayments);
+      setError('');
     } catch (error) {
-      console.error('Lỗi khi tải danh sách phí chờ thanh toán:', error)
-      setError(error.response?.data || 'Có lỗi xảy ra khi tải danh sách phí chờ thanh toán')
+      console.error('Lỗi khi tải danh sách phí chờ thanh toán:', error);
+      setError(
+        error.response?.data ||
+          'Có lỗi xảy ra khi tải danh sách phí chờ thanh toán'
+      );
     }
-  }
+  };
 
   const loadPaymentHistory = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('user'))
-      if (!user?.userId) return
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user?.userId) return;
 
-      const response = await axios.get(`${API_URL}/residents/payments/history?userId=${user.userId}`)
+      const response = await axios.get(
+        `${API_URL}/residents/payments/history?userId=${user.userId}`
+      );
       // Chỉ lấy các khoản phí đã thanh toán thành công
-      const paidPayments = response.data.filter(payment => payment.paymentStatus === 'PAID')
-      setPaymentHistory(paidPayments)
+      const paidPayments = response.data.filter(
+        (payment) => payment.paymentStatus === 'PAID'
+      );
+      setPaymentHistory(paidPayments);
     } catch (error) {
-      console.error('Lỗi khi tải lịch sử thanh toán:', error)
-      setError(error.response?.data || 'Có lỗi xảy ra khi tải lịch sử thanh toán')
+      console.error('Lỗi khi tải lịch sử thanh toán:', error);
+      setError(
+        error.response?.data || 'Có lỗi xảy ra khi tải lịch sử thanh toán'
+      );
     }
-  }
+  };
 
   const handleSubmitPayment = async (e) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setError('');
+    setSuccess('');
 
     if (!selectedPayment) {
-      setError('Vui lòng chọn khoản phí cần thanh toán')
-      return
+      setError('Vui lòng chọn khoản phí cần thanh toán');
+      return;
     }
 
     if (!transactionCode.trim()) {
-      setError('Vui lòng nhập mã giao dịch')
-      return
+      setError('Vui lòng nhập mã giao dịch');
+      return;
     }
 
     try {
-      const user = JSON.parse(localStorage.getItem('user'))
+      const user = JSON.parse(localStorage.getItem('user'));
       if (!user?.userId) {
-        setError('Vui lòng đăng nhập để sử dụng tính năng này')
-        return
+        setError('Vui lòng đăng nhập để sử dụng tính năng này');
+        return;
       }
 
-      await axios.post(`${API_URL}/residents/payments/submit?userId=${user.userId}`, {
-        paymentDetailId: selectedPayment.paymentDetailId,
-        transactionCode: transactionCode.trim()
-      })
+      await axios.post(
+        `${API_URL}/residents/payments/submit?userId=${user.userId}`,
+        {
+          paymentDetailId: selectedPayment.paymentDetailId,
+          transactionCode: transactionCode.trim(),
+        }
+      );
 
-      setSuccess('Gửi yêu cầu thanh toán thành công')
-      setSelectedPayment(null)
-      setTransactionCode('')
-      loadPendingPayments()
-      loadPaymentHistory()
+      setSuccess('Gửi yêu cầu thanh toán thành công');
+      setSelectedPayment(null);
+      setTransactionCode('');
+      loadPendingPayments();
+      loadPaymentHistory();
     } catch (error) {
-      setError(error.response?.data || 'Có lỗi xảy ra khi gửi yêu cầu thanh toán')
+      setError(
+        error.response?.data || 'Có lỗi xảy ra khi gửi yêu cầu thanh toán'
+      );
     }
-  }
+  };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
-  }
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(amount);
+  };
 
   const formatDateTime = (dateTimeStr) => {
-    const date = new Date(dateTimeStr)
-    return date.toLocaleString('vi-VN')
-  }
+    const date = new Date(dateTimeStr);
+    return date.toLocaleString('vi-VN');
+  };
 
   const getStatusText = (status) => {
     switch (status?.toUpperCase()) {
       case 'PAID':
-        return 'Đã thanh toán'
+        return 'Đã thanh toán';
       case 'PROCESSING':
-        return 'Đang xử lý'
+        return 'Đang xử lý';
       case 'UNPAID':
-        return 'Chưa thanh toán'
+        return 'Chưa thanh toán';
       default:
-        return status || 'Không xác định'
+        return status || 'Không xác định';
     }
-  }
+  };
 
   const getStatusClass = (status) => {
     switch (status?.toUpperCase()) {
       case 'PAID':
-        return 'status-success'
+        return 'status-success';
       case 'PROCESSING':
-        return 'status-warning'
+        return 'status-warning';
       case 'UNPAID':
-        return 'status-danger'
+        return 'status-danger';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   const getServiceTypeText = (type) => {
     const serviceTypes = {
-      'water': 'Dịch vụ nước',
-      'electricity': 'Dịch vụ điện',
-      'maintenance': 'Dịch vụ bảo trì',
-      'motorbike': 'Dịch vụ xe máy',
-      'car': 'Dịch vụ xe hơi',
-      'management': 'Dịch vụ quản lý'
-    }
-    return serviceTypes[type] || type
-  }
+      Nước: 'Dịch vụ nước',
+      Điện: 'Dịch vụ điện',
+    };
+    return serviceTypes[type] || type;
+  };
 
   const renderPaymentCard = (payment) => (
     <div key={payment.paymentDetailId} className="payment-card">
       <div className="payment-header">
         <h3>{payment.serviceName}</h3>
-        <span className={`status-badge ${getStatusClass(payment.paymentStatus)}`}>
+        <span
+          className={`status-badge ${getStatusClass(payment.paymentStatus)}`}
+        >
           {getStatusText(payment.paymentStatus)}
         </span>
       </div>
@@ -151,28 +170,28 @@ const PaymentManagement = () => {
         <p>Kỳ thu: {payment.periodInfo}</p>
         <p>Số lượng: {payment.amount}</p>
         <p>Đơn giá: {formatCurrency(payment.unitPrice)}</p>
-        <p className="total-price">Tổng tiền: {formatCurrency(payment.totalPrice)}</p>
+        <p className="total-price">
+          Tổng tiền: {formatCurrency(payment.totalPrice)}
+        </p>
         <p>Ngày tạo: {formatDateTime(payment.createdAt)}</p>
         {payment.transactionCode && (
           <p>Mã giao dịch: {payment.transactionCode}</p>
         )}
-        {payment.note && (
-          <p>Ghi chú: {payment.note}</p>
-        )}
+        {payment.note && <p>Ghi chú: {payment.note}</p>}
       </div>
       {payment.paymentStatus === 'UNPAID' && (
         <button
           className="pay-button"
           onClick={() => {
-            setSelectedPayment(payment)
-            setTransactionCode('')
+            setSelectedPayment(payment);
+            setTransactionCode('');
           }}
         >
           Thanh toán
         </button>
       )}
     </div>
-  )
+  );
 
   return (
     <div className="payment-management">
@@ -188,7 +207,11 @@ const PaymentManagement = () => {
             <p>Kỳ thu: {selectedPayment.periodInfo}</p>
             <p>Tổng tiền: {formatCurrency(selectedPayment.totalPrice)}</p>
             <div className="qr-code-container">
-              <img src={QRCodeImage} alt="Mã QR thanh toán" className="qr-code-image" />
+              <img
+                src={QRCodeImage}
+                alt="Mã QR thanh toán"
+                className="qr-code-image"
+              />
               <p className="qr-code-note">Quét mã QR để thanh toán</p>
             </div>
             <form onSubmit={handleSubmitPayment}>
@@ -210,8 +233,8 @@ const PaymentManagement = () => {
                   type="button"
                   className="cancel-button"
                   onClick={() => {
-                    setSelectedPayment(null)
-                    setTransactionCode('')
+                    setSelectedPayment(null);
+                    setTransactionCode('');
                   }}
                 >
                   Hủy
@@ -244,7 +267,7 @@ const PaymentManagement = () => {
               <p>Không có khoản phí nào chờ thanh toán</p>
             ) : (
               <div className="payment-grid">
-                {pendingPayments.map(payment => renderPaymentCard(payment))}
+                {pendingPayments.map((payment) => renderPaymentCard(payment))}
               </div>
             )}
           </div>
@@ -256,14 +279,14 @@ const PaymentManagement = () => {
               <p>Chưa có lịch sử thanh toán</p>
             ) : (
               <div className="payment-grid">
-                {paymentHistory.map(payment => renderPaymentCard(payment))}
+                {paymentHistory.map((payment) => renderPaymentCard(payment))}
               </div>
             )}
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PaymentManagement 
+export default PaymentManagement;

@@ -1,20 +1,22 @@
 package KTPM.Backend.dto;
 
-import KTPM.Backend.entity.User;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfileResponse {
+public class AuthenticationResponse {
+    private String token;
     private Integer userId;
     private String username;
-    private String email;
     private String fullName;
+    private String email;
     private String phone;
-    private User.Role role;
-    private String apartmentCode;
+    private String role;
     private Integer ownershipId;
+    private String apartmentCode;
 } 

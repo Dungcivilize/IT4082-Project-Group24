@@ -1,17 +1,23 @@
 package KTPM.Backend.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import java.util.List;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class User {
-    public enum UserRole {
+    public enum Role {
         admin, accountant, resident
     }
 
@@ -20,7 +26,7 @@ public class User {
     @Column(name = "user_id")
     private Integer userId;
 
-    @Column(name = "username", nullable = false, length = 50, unique = true)
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(name = "password", nullable = false, length = 255)
@@ -37,9 +43,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private UserRole role = UserRole.resident;
+    private Role role = Role.resident;
 
-    @ManyToOne
-    @JoinColumn(name = "apartment_id", unique = true)
-    private Apartment apartment;
+    @OneToMany(mappedBy = "user")
+    private List<ApartmentOwnership> ownerships;
 } 

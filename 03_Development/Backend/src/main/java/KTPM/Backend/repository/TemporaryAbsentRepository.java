@@ -8,13 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import KTPM.Backend.entity.Apartment;
+import KTPM.Backend.entity.ApartmentOwnership;
 import KTPM.Backend.entity.Resident;
 import KTPM.Backend.entity.TemporaryAbsent;
 
 @Repository
 public interface TemporaryAbsentRepository extends JpaRepository<TemporaryAbsent, Integer> {
-    List<TemporaryAbsent> findByResident_Apartment(Apartment apartment);
+    List<TemporaryAbsent> findByResident_Ownership(ApartmentOwnership ownership);
 
     @Query("SELECT CASE WHEN COUNT(ta) > 0 THEN true ELSE false END FROM TemporaryAbsent ta " +
            "WHERE ta.resident = :resident " +

@@ -4,17 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "payment_detail")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PaymentDetail {
-    public enum PaymentDetailStatus {
+    public enum Status {
         pending, paid
     }
 
@@ -28,21 +24,21 @@ public class PaymentDetail {
     private PaymentPeriod paymentPeriod;
 
     @ManyToOne
-    @JoinColumn(name = "apartment_id", nullable = false)
-    private Apartment apartment;
+    @JoinColumn(name = "ownership_id", nullable = false)
+    private ApartmentOwnership ownership;
 
     @ManyToOne
     @JoinColumn(name = "service_type_id", nullable = false)
     private ServiceType serviceType;
 
-    @Column(name = "amount", nullable = false)
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private PaymentDetailStatus status = PaymentDetailStatus.pending;
+    @Column(name = "status", columnDefinition = "ENUM('pending', 'paid') DEFAULT 'pending'")
+    private Status status = Status.pending;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "paymentDetail", cascade = CascadeType.ALL)
