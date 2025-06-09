@@ -1,0 +1,37 @@
+.header {
+  background: linear-gradient(90deg, #6b21a8, #4f46e5); /* purple to indigo */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.title {
+  font-size: 1.5rem; /* tương đương text-2xl */
+  font-weight: 700;
+}
+
+.logoutBtn {
+  padding: 8px 16px;
+  border-radius: 9999px; /* rounded-full */
+  background-color: white;
+  color: #6b21a8; /* màu tím */
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(107,33,168,0.4);
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.logoutBtn:hover {
+  background-color: #ede9fe; /* purple-100 */
+  color: #4c1d95; /* tím đậm hơn */
+  box-shadow: 0 6px 12px rgba(76,29,149,0.6);
+}
+
+.logoutBtn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 4px rgba(76,29,149,0.9);
+}
