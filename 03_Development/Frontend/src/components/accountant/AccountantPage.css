@@ -1,0 +1,79 @@
+.accountant-container {
+  padding: 1.5rem;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+}
+
+.accountant-title {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.period-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.period-button {
+  padding: 0.5rem 1.2rem;
+  background-color: #eee;
+  color: #333;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.period-button:hover {
+  background-color: #ddd;
+}
+
+.period-button.active {
+  background-color: #1976d2;
+  color: white;
+}
+
+.period-details {
+  margin-top: 2rem;
+}
+
+.period-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 1.2rem;
+  color: #222;
+}
+
+.apartment-block {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.apartment-title {
+  margin-bottom: 0.8rem;
+  font-size: 1.2rem;
+  color: #444;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.invoice-table thead {
+  background-color: #f0f0f0;
+}
+
+.invoice-table th,
+.invoice-table td {
+  border: 1px solid #ccc;
+  padding: 0.6rem;
+}

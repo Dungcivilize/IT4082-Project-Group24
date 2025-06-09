@@ -12,4 +12,6 @@ import KTPM.Backend.entity.PaymentDetail;
 public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, Integer> {
     List<PaymentDetail> findByApartment(Apartment apartment);
     List<PaymentDetail> findByApartmentAndStatus(Apartment apartment, PaymentDetail.PaymentDetailStatus status);
-} 
+
+    List<PaymentDetail> findByPaymentPeriod_PaymentPeriodId(Integer paymentPeriodId);
+}

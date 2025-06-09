@@ -1,0 +1,12 @@
+.accountant-layout-container {
+  padding: 1.5rem;
+  background-color: #f5f8fa;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.accountant-layout-title {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}

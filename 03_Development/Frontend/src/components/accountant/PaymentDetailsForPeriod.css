@@ -1,0 +1,94 @@
+.pd-container {
+  padding: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pd-title {
+  font-size: 1.5rem;
+  color: #34495e;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.pd-apartment {
+  margin-bottom: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.pd-apartment-code {
+  font-size: 1.25rem;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+}
+
+.pd-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pd-table th,
+.pd-table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem 0.75rem;
+}
+
+.pd-table thead {
+  background-color: #f0f0f0;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.pd-input-amount {
+  width: 70px;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.pd-input-amount:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 5px rgba(25, 118, 210, 0.4);
+}
+
+.pd-save-btn {
+  display: block;
+  margin: 0 auto 1rem auto;
+  padding: 0.7rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pd-save-btn:disabled {
+  background-color: #90caf9;
+  cursor: not-allowed;
+}
+
+.pd-save-btn:not(:disabled):hover {
+  background-color: #1565c0;
+}
+
+.pd-loading {
+  font-size: 1.1rem;
+  text-align: center;
+  color: #555;
+}
+
+.pd-error {
+  color: #e74c3c;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 1rem;
+}
