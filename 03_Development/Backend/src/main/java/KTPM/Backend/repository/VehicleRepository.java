@@ -12,4 +12,6 @@ import KTPM.Backend.entity.Vehicle;
 public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
     List<Vehicle> findByApartment(Apartment apartment);
     boolean existsByLicensePlate(String licensePlate);
+
+    int countByApartmentAndType(Apartment apartment, Vehicle.VehicleType type);
 } 
