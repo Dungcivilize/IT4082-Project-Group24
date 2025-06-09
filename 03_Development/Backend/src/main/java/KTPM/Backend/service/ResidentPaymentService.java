@@ -14,89 +14,87 @@ import KTPM.Backend.dto.ResidentPaymentRequest;
 import KTPM.Backend.entity.Payment;
 import KTPM.Backend.entity.PaymentDetail;
 import KTPM.Backend.entity.User;
+import KTPM.Backend.entity.ApartmentOwnership;
 import KTPM.Backend.repository.PaymentDetailRepository;
+import KTPM.Backend.repository.PaymentRepository;
 import KTPM.Backend.repository.UserRepository;
+import KTPM.Backend.service.ApartmentOwnershipService;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class ResidentPaymentService {
     @Autowired
     private PaymentDetailRepository paymentDetailRepository;
 
     @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ApartmentOwnershipService apartmentOwnershipService;
 
     public List<ResidentPaymentDetailResponse> getPendingPayments(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
-        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByApartmentAndStatus(
-            user.getApartment(), 
-            PaymentDetail.PaymentDetailStatus.pending
-        );
-
-        return paymentDetails.stream()
-                .map(pd -> {
-                    // Tính tổng tiền
-                    BigDecimal totalPrice = pd.getAmount().multiply(pd.getServiceType().getUnitPrice());
-                    
-                    // Lấy thông tin payment
-                    Payment payment = pd.getPayment();
-                    
-                    return new ResidentPaymentDetailResponse(
-                        pd.getPaymentDetailId(),
-                        pd.getServiceType().getServiceName(),
-                        pd.getServiceType().getServiceType().toString(),
-                        pd.getAmount(),
-                        pd.getServiceType().getUnitPrice(),
-                        totalPrice,
-                        pd.getStatus(),
-                        pd.getCreatedAt(),
-                        String.format("%02d/%d", pd.getPaymentPeriod().getMonth(), pd.getPaymentPeriod().getYear()),
-                        payment != null ? payment.getStatus().toString() : null,
-                        payment != null ? payment.getTransactionCode() : null,
-                        payment != null ? payment.getNote() : null
-                    );
-                })
-                .collect(Collectors.toList());
+        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByOwnershipAndStatus(ownership, PaymentDetail.Status.pending);
+        return convertToResponse(paymentDetails);
     }
 
     public List<ResidentPaymentDetailResponse> getPaymentHistory(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
-        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByApartment(user.getApartment());
+        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByOwnershipOwnershipId(ownership.getOwnershipId());
+        return convertToResponse(paymentDetails);
+    }
 
+    private List<ResidentPaymentDetailResponse> convertToResponse(List<PaymentDetail> paymentDetails) {
         return paymentDetails.stream()
-                .map(pd -> {
-                    // Tính tổng tiền
-                    BigDecimal totalPrice = pd.getAmount().multiply(pd.getServiceType().getUnitPrice());
-                    
-                    // Lấy thông tin payment
-                    Payment payment = pd.getPayment();
-                    
-                    return new ResidentPaymentDetailResponse(
-                        pd.getPaymentDetailId(),
-                        pd.getServiceType().getServiceName(),
-                        pd.getServiceType().getServiceType().toString(),
-                        pd.getAmount(),
-                        pd.getServiceType().getUnitPrice(),
-                        totalPrice,
-                        pd.getStatus(),
-                        pd.getCreatedAt(),
-                        String.format("%02d/%d", pd.getPaymentPeriod().getMonth(), pd.getPaymentPeriod().getYear()),
-                        payment != null ? payment.getStatus().toString() : null,
-                        payment != null ? payment.getTransactionCode() : null,
-                        payment != null ? payment.getNote() : null
-                    );
-                })
+                .map(pd -> new ResidentPaymentDetailResponse(
+                    pd.getPaymentDetailId(),
+                    pd.getPaymentPeriod().getMonth(),
+                    pd.getPaymentPeriod().getYear(),
+                    pd.getServiceType().getServiceName(),
+                    pd.getAmount(),
+                    pd.getServiceType().getUnitPrice(),
+                    pd.getAmount().multiply(pd.getServiceType().getUnitPrice()),
+                    pd.getStatus(),
+                    pd.getPayment() != null ? pd.getPayment().getStatus() : Payment.PaymentStatus.UNPAID,
+                    pd.getPayment() != null ? pd.getPayment().getTransactionCode() : null,
+                    pd.getPayment() != null ? pd.getPayment().getPaidAt() : null
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<ResidentPaymentDetailResponse> getPaymentDetails(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
+
+        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByOwnershipOwnershipId(ownership.getOwnershipId());
+        return paymentDetails.stream()
+                .map(pd -> new ResidentPaymentDetailResponse(
+                    pd.getPaymentDetailId(),
+                    pd.getPaymentPeriod().getMonth(),
+                    pd.getPaymentPeriod().getYear(),
+                    pd.getServiceType().getServiceName(),
+                    pd.getAmount(),
+                    pd.getServiceType().getUnitPrice(),
+                    pd.getAmount().multiply(pd.getServiceType().getUnitPrice()),
+                    pd.getStatus(),
+                    pd.getPayment() != null ? pd.getPayment().getStatus() : null,
+                    pd.getPayment() != null ? pd.getPayment().getTransactionCode() : null,
+                    pd.getPayment() != null ? pd.getPayment().getPaidAt() : null
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -105,20 +103,18 @@ public class ResidentPaymentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         PaymentDetail paymentDetail = paymentDetailRepository.findById(request.getPaymentDetailId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết thanh toán"));
 
         // Kiểm tra quyền thanh toán
-        if (!paymentDetail.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+        if (!paymentDetail.getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
             throw new RuntimeException("Không có quyền thanh toán khoản phí này");
         }
 
         // Kiểm tra trạng thái payment detail
-        if (paymentDetail.getStatus() != PaymentDetail.PaymentDetailStatus.pending) {
+        if (paymentDetail.getStatus() != PaymentDetail.Status.pending) {
             throw new RuntimeException("Khoản phí này không ở trạng thái chờ thanh toán");
         }
 
@@ -144,22 +140,20 @@ public class ResidentPaymentService {
         payment.setPaidAt(LocalDateTime.now());
         payment.setStatus(Payment.PaymentStatus.PROCESSING);
 
-        // Lưu payment detail (sẽ cascade lưu payment)
-        paymentDetail = paymentDetailRepository.save(paymentDetail);
+        payment = paymentRepository.save(payment);
 
         return new ResidentPaymentDetailResponse(
             paymentDetail.getPaymentDetailId(),
+            paymentDetail.getPaymentPeriod().getMonth(),
+            paymentDetail.getPaymentPeriod().getYear(),
             paymentDetail.getServiceType().getServiceName(),
-            paymentDetail.getServiceType().getServiceType().toString(),
             paymentDetail.getAmount(),
             paymentDetail.getServiceType().getUnitPrice(),
             totalPrice,
             paymentDetail.getStatus(),
-            paymentDetail.getCreatedAt(),
-            String.format("%02d/%d", paymentDetail.getPaymentPeriod().getMonth(), paymentDetail.getPaymentPeriod().getYear()),
-            payment.getStatus().toString(),
+            payment.getStatus(),
             payment.getTransactionCode(),
-            payment.getNote()
+            payment.getPaidAt()
         );
     }
 } 

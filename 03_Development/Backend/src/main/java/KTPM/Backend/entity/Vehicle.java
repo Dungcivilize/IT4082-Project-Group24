@@ -21,8 +21,8 @@ public class Vehicle {
     private Integer vehicleId;
 
     @ManyToOne
-    @JoinColumn(name = "apartment_id", nullable = false)
-    private Apartment apartment;
+    @JoinColumn(name = "ownership_id", nullable = false)
+    private ApartmentOwnership ownership;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)

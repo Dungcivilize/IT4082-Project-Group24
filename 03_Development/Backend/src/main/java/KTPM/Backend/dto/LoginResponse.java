@@ -1,6 +1,6 @@
 package KTPM.Backend.dto;
 
-import KTPM.Backend.entity.User;
+import KTPM.Backend.entity.User.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -11,6 +11,6 @@ public class LoginResponse {
     private String email;
     private String fullName;
     private String phone;
-    private User.UserRole role;
-    private Integer apartmentId;
+    private Role role;
+    private Integer ownershipId;
 } 

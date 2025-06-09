@@ -5,14 +5,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import KTPM.Backend.entity.ApartmentOwnership;
+import KTPM.Backend.entity.Resident;
 import KTPM.Backend.dto.ResidentRequest;
 import KTPM.Backend.dto.ResidentResponse;
-import KTPM.Backend.entity.Apartment;
-import KTPM.Backend.entity.Resident;
-import KTPM.Backend.entity.User;
 import KTPM.Backend.repository.ResidentRepository;
-import KTPM.Backend.repository.UserRepository;
 
 @Service
 public class ResidentService {
@@ -20,208 +19,108 @@ public class ResidentService {
     private ResidentRepository residentRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private ApartmentOwnershipService apartmentOwnershipService;
 
-    public List<ResidentResponse> getResidentsByUser(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
-
-        List<Resident> residents = residentRepository.findByApartment(user.getApartment());
-        return residents.stream()
-                .map(resident -> new ResidentResponse(
-                    resident.getResidentId(),
-                    resident.getFullName(),
-                    resident.getBirthDate(),
-                    resident.getGender(),
-                    resident.getIdentityCard(),
-                    resident.getPhone(),
-                    resident.getEmail(),
-                    resident.getOccupation(),
-                    resident.getResidentType(),
-                    resident.getRelationship(),
-                    resident.getStatus()
-                ))
+    public List<ResidentResponse> getAllResidents() {
+        return residentRepository.findAll().stream()
+                .map(ResidentResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
+    public ResidentResponse getResidentById(Integer id) {
+        Resident resident = residentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân"));
+        return ResidentResponse.fromEntity(resident);
+    }
+
+    public List<ResidentResponse> getResidentsByOwnership(Integer ownershipId) {
+        return residentRepository.findByOwnershipOwnershipId(ownershipId).stream()
+                .map(ResidentResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ResidentResponse> getResidentsByUser(Integer userId) {
+        // Lấy ownership hiện tại của user
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
+        
+        // Lấy danh sách cư dân theo ownership
+        return residentRepository.findByOwnershipOwnershipId(ownership.getOwnershipId()).stream()
+                .map(ResidentResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
     public ResidentResponse addResident(Integer userId, ResidentRequest request) {
-        if (request.getFullName() == null || request.getBirthDate() == null || 
-            request.getGender() == null || request.getIdentityCard() == null ||
-            request.getResidentType() == null) {
-            throw new RuntimeException("Vui lòng điền đầy đủ thông tin bắt buộc");
+        // Lấy ownership hiện tại của user
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
+
+        // Kiểm tra CMND/CCCD đã tồn tại chưa
+        if (request.getIdentityCard() != null) {
+            residentRepository.findByIdentityCard(request.getIdentityCard())
+                    .ifPresent(r -> {
+                        throw new RuntimeException("CMND/CCCD đã tồn tại");
+                    });
         }
 
-        // Kiểm tra nếu là thành viên thì phải có quan hệ với chủ hộ
-        if (request.getResidentType() == Resident.ResidentType.member && 
-            (request.getRelationship() == null || request.getRelationship().trim().isEmpty())) {
-            throw new RuntimeException("Vui lòng nhập quan hệ với chủ hộ");
+        // Chuyển đổi từ request sang entity
+        Resident resident = request.toEntity();
+        resident.setOwnership(ownership);
+
+        // Lưu vào database
+        Resident savedResident = residentRepository.save(resident);
+        return ResidentResponse.fromEntity(savedResident);
+    }
+
+    @Transactional
+    public ResidentResponse updateResident(Integer userId, Integer residentId, ResidentRequest request) {
+        // Lấy ownership hiện tại của user
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
+
+        // Lấy thông tin cư dân
+        Resident resident = residentRepository.findById(residentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân"));
+
+        // Kiểm tra quyền sở hữu
+        if (!ownership.getOwnershipId().equals(resident.getOwnership().getOwnershipId())) {
+            throw new RuntimeException("Không có quyền cập nhật thông tin cư dân này");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        Apartment apartment = user.getApartment();
-        if (apartment == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
+        // Kiểm tra CMND/CCCD đã tồn tại chưa (nếu có thay đổi)
+        if (request.getIdentityCard() != null &&
+                !request.getIdentityCard().equals(resident.getIdentityCard())) {
+            residentRepository.findByIdentityCard(request.getIdentityCard())
+                    .ifPresent(r -> {
+                        throw new RuntimeException("CMND/CCCD đã tồn tại");
+                    });
         }
 
-        // Kiểm tra nếu thêm chủ hộ mới thì căn hộ không được có chủ hộ khác
-        if (request.getResidentType() == Resident.ResidentType.owner) {
-            boolean hasOwner = residentRepository.findByApartment(apartment).stream()
-                    .anyMatch(r -> r.getResidentType() == Resident.ResidentType.owner);
-            if (hasOwner) {
-                throw new RuntimeException("Căn hộ đã có chủ hộ");
-            }
-        }
-
-        Resident resident = new Resident();
-        resident.setApartment(apartment);
+        // Cập nhật thông tin từ request
         resident.setFullName(request.getFullName());
         resident.setBirthDate(request.getBirthDate());
-        resident.setGender(request.getGender());
+        resident.setGender(Resident.Gender.valueOf(request.getGender().toLowerCase()));
         resident.setIdentityCard(request.getIdentityCard());
         resident.setPhone(request.getPhone());
         resident.setEmail(request.getEmail());
         resident.setOccupation(request.getOccupation());
-        resident.setResidentType(request.getResidentType());
-        
-        // Chỉ set relationship nếu là thành viên
-        if (request.getResidentType() == Resident.ResidentType.member) {
-            resident.setRelationship(request.getRelationship());
-        } else {
-            resident.setRelationship(null); // Chủ hộ không có quan hệ
-        }
-        
-        resident.setStatus(request.getStatus() != null ? request.getStatus() : Resident.ResidentStatus.living);
-        resident = residentRepository.save(resident);
+        resident.setResidentType(Resident.ResidentType.valueOf(request.getResidentType().toLowerCase()));
+        resident.setRelationship(request.getRelationship());
 
-        return new ResidentResponse(
-            resident.getResidentId(),
-            resident.getFullName(),
-            resident.getBirthDate(),
-            resident.getGender(),
-            resident.getIdentityCard(),
-            resident.getPhone(),
-            resident.getEmail(),
-            resident.getOccupation(),
-            resident.getResidentType(),
-            resident.getRelationship(),
-            resident.getStatus()
-        );
+        Resident savedResident = residentRepository.save(resident);
+        return ResidentResponse.fromEntity(savedResident);
     }
 
-    public ResidentResponse updateResident(Integer userId, Integer residentId, ResidentRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
-
-        Resident resident = residentRepository.findById(residentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy thành viên"));
-
-        // Kiểm tra xem resident có thuộc căn hộ của user không
-        if (!resident.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
-            throw new RuntimeException("Không có quyền chỉnh sửa thông tin thành viên này");
-        }
-
-        // Nếu đang thay đổi loại cư dân
-        if (request.getResidentType() != null && request.getResidentType() != resident.getResidentType()) {
-            // Nếu đổi từ thành viên sang chủ hộ
-            if (request.getResidentType() == Resident.ResidentType.owner) {
-                // Kiểm tra xem căn hộ đã có chủ hộ khác chưa
-                boolean hasOtherOwner = residentRepository.findByApartment(user.getApartment()).stream()
-                        .anyMatch(r -> r.getResidentType() == Resident.ResidentType.owner && !r.getResidentId().equals(residentId));
-                if (hasOtherOwner) {
-                    throw new RuntimeException("Căn hộ đã có chủ hộ");
-                }
-                resident.setRelationship(null); // Xóa quan hệ khi chuyển thành chủ hộ
-            }
-            // Nếu đổi từ chủ hộ sang thành viên
-            else if (request.getResidentType() == Resident.ResidentType.member) {
-                if (request.getRelationship() == null || request.getRelationship().trim().isEmpty()) {
-                    throw new RuntimeException("Vui lòng nhập quan hệ với chủ hộ");
-                }
-                resident.setRelationship(request.getRelationship());
-            }
-            resident.setResidentType(request.getResidentType());
-        }
-
-        // Cập nhật các trường khác nếu được gửi lên
-        if (request.getFullName() != null) {
-            resident.setFullName(request.getFullName());
-        }
-        if (request.getBirthDate() != null) {
-            resident.setBirthDate(request.getBirthDate());
-        }
-        if (request.getGender() != null) {
-            resident.setGender(request.getGender());
-        }
-        if (request.getIdentityCard() != null) {
-            resident.setIdentityCard(request.getIdentityCard());
-        }
-        if (request.getPhone() != null) {
-            resident.setPhone(request.getPhone());
-        }
-        if (request.getEmail() != null) {
-            resident.setEmail(request.getEmail());
-        }
-        if (request.getOccupation() != null) {
-            resident.setOccupation(request.getOccupation());
-        }
-        if (request.getStatus() != null) {
-            resident.setStatus(request.getStatus());
-        }
-        // Chỉ cập nhật relationship nếu là thành viên và có gửi relationship mới
-        if (resident.getResidentType() == Resident.ResidentType.member && request.getRelationship() != null) {
-            resident.setRelationship(request.getRelationship());
-        }
-
-        resident = residentRepository.save(resident);
-        return new ResidentResponse(
-            resident.getResidentId(),
-            resident.getFullName(),
-            resident.getBirthDate(),
-            resident.getGender(),
-            resident.getIdentityCard(),
-            resident.getPhone(),
-            resident.getEmail(),
-            resident.getOccupation(),
-            resident.getResidentType(),
-            resident.getRelationship(),
-            resident.getStatus()
-        );
-    }
-
+    @Transactional
     public void deleteResident(Integer userId, Integer residentId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        // Lấy ownership hiện tại của user
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
-
+        // Lấy thông tin cư dân
         Resident resident = residentRepository.findById(residentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy thành viên"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cư dân"));
 
-        // Kiểm tra xem resident có thuộc căn hộ của user không
-        if (!resident.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
-            throw new RuntimeException("Không có quyền xóa thành viên này");
-        }
-
-        // Không cho phép xóa chủ hộ nếu còn thành viên khác
-        if (resident.getResidentType() == Resident.ResidentType.owner) {
-            long memberCount = residentRepository.findByApartment(user.getApartment()).stream()
-                    .filter(r -> !r.getResidentId().equals(residentId))
-                    .count();
-            if (memberCount > 0) {
-                throw new RuntimeException("Không thể xóa chủ hộ khi còn thành viên khác trong hộ");
-            }
+        // Kiểm tra quyền sở hữu
+        if (!resident.getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
+            throw new RuntimeException("Không có quyền xóa cư dân này");
         }
 
         residentRepository.delete(resident);

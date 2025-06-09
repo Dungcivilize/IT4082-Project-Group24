@@ -11,9 +11,11 @@ import KTPM.Backend.dto.ResidentTemporaryAbsentResponse;
 import KTPM.Backend.entity.Resident;
 import KTPM.Backend.entity.TemporaryAbsent;
 import KTPM.Backend.entity.User;
+import KTPM.Backend.entity.ApartmentOwnership;
 import KTPM.Backend.repository.ResidentRepository;
 import KTPM.Backend.repository.TemporaryAbsentRepository;
 import KTPM.Backend.repository.UserRepository;
+import KTPM.Backend.service.ApartmentOwnershipService;
 
 @Service
 public class ResidentTemporaryAbsentService {
@@ -26,21 +28,22 @@ public class ResidentTemporaryAbsentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ApartmentOwnershipService apartmentOwnershipService;
+
     public List<ResidentTemporaryAbsentResponse> getTemporaryAbsents(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
-        List<TemporaryAbsent> temporaryAbsents = temporaryAbsentRepository.findByResident_Apartment(user.getApartment());
+        List<TemporaryAbsent> temporaryAbsents = temporaryAbsentRepository.findByResident_Ownership(ownership);
         return temporaryAbsents.stream()
                 .map(ta -> new ResidentTemporaryAbsentResponse(
                     ta.getTemporaryAbsentId(),
                     ta.getResident().getResidentId(),
                     ta.getResident().getFullName(),
-                    ta.getResident().getApartment().getApartmentCode(),
+                    ta.getResident().getOwnership().getApartment().getApartmentCode(),
                     ta.getStartDate(),
                     ta.getEndDate(),
                     ta.getTemporaryAddress(),
@@ -53,15 +56,13 @@ public class ResidentTemporaryAbsentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         Resident resident = residentRepository.findById(residentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thành viên"));
 
-        // Kiểm tra xem resident có thuộc căn hộ của user không
-        if (!resident.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+        // Kiểm tra xem resident có thuộc quyền sở hữu của user không
+        if (!resident.getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
             throw new RuntimeException("Không có quyền đăng ký tạm vắng cho thành viên này");
         }
 
@@ -93,7 +94,7 @@ public class ResidentTemporaryAbsentService {
             temporaryAbsent.getTemporaryAbsentId(),
             temporaryAbsent.getResident().getResidentId(),
             temporaryAbsent.getResident().getFullName(),
-            temporaryAbsent.getResident().getApartment().getApartmentCode(),
+            temporaryAbsent.getResident().getOwnership().getApartment().getApartmentCode(),
             temporaryAbsent.getStartDate(),
             temporaryAbsent.getEndDate(),
             temporaryAbsent.getTemporaryAddress(),
@@ -105,15 +106,13 @@ public class ResidentTemporaryAbsentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         TemporaryAbsent temporaryAbsent = temporaryAbsentRepository.findById(temporaryAbsentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin tạm vắng"));
 
-        // Kiểm tra xem temporary absent có thuộc căn hộ của user không
-        if (!temporaryAbsent.getResident().getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+        // Kiểm tra xem temporary absent có thuộc quyền sở hữu của user không
+        if (!temporaryAbsent.getResident().getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
             throw new RuntimeException("Không có quyền xóa thông tin tạm vắng này");
         }
 
@@ -129,15 +128,13 @@ public class ResidentTemporaryAbsentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         TemporaryAbsent temporaryAbsent = temporaryAbsentRepository.findById(temporaryAbsentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin tạm vắng"));
 
-        // Kiểm tra xem temporary absent có thuộc căn hộ của user không
-        if (!temporaryAbsent.getResident().getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+        // Kiểm tra xem temporary absent có thuộc quyền sở hữu của user không
+        if (!temporaryAbsent.getResident().getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
             throw new RuntimeException("Không có quyền cập nhật thông tin tạm vắng này");
         }
 
@@ -163,7 +160,7 @@ public class ResidentTemporaryAbsentService {
             temporaryAbsent.getTemporaryAbsentId(),
             temporaryAbsent.getResident().getResidentId(),
             temporaryAbsent.getResident().getFullName(),
-            temporaryAbsent.getResident().getApartment().getApartmentCode(),
+            temporaryAbsent.getResident().getOwnership().getApartment().getApartmentCode(),
             temporaryAbsent.getStartDate(),
             temporaryAbsent.getEndDate(),
             temporaryAbsent.getTemporaryAddress(),

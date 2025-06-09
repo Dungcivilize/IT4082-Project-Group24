@@ -14,12 +14,30 @@ public class ResidentResponse {
     private Integer residentId;
     private String fullName;
     private LocalDate birthDate;
-    private Resident.Gender gender;
+    private String gender;
     private String identityCard;
     private String phone;
     private String email;
     private String occupation;
-    private Resident.ResidentType residentType;
+    private String residentType;
     private String relationship;
-    private Resident.ResidentStatus status;
+    private String status;
+    private String apartmentCode;
+
+    public static ResidentResponse fromEntity(Resident resident) {
+        return new ResidentResponse(
+            resident.getResidentId(),
+            resident.getFullName(),
+            resident.getBirthDate(),
+            resident.getGender().toString(),
+            resident.getIdentityCard(),
+            resident.getPhone(),
+            resident.getEmail(),
+            resident.getOccupation(),
+            resident.getResidentType().toString(),
+            resident.getRelationship(),
+            resident.getStatus().toString(),
+            resident.getOwnership().getApartment().getApartmentCode()
+        );
+    }
 } 

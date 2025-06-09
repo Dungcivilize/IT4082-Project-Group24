@@ -28,8 +28,8 @@ public class TemporaryResident {
     private Integer temporaryResidentId;
 
     @ManyToOne
-    @JoinColumn(name = "apartment_id", nullable = false)
-    private Apartment apartment;
+    @JoinColumn(name = "ownership_id", nullable = false)
+    private ApartmentOwnership ownership;
 
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;

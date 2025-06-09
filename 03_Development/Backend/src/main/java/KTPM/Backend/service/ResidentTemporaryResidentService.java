@@ -8,11 +8,12 @@ import org.springframework.stereotype.Service;
 
 import KTPM.Backend.dto.ResidentTemporaryResidentRequest;
 import KTPM.Backend.dto.ResidentTemporaryResidentResponse;
-import KTPM.Backend.entity.Apartment;
+import KTPM.Backend.entity.ApartmentOwnership;
 import KTPM.Backend.entity.TemporaryResident;
 import KTPM.Backend.entity.User;
 import KTPM.Backend.repository.TemporaryResidentRepository;
 import KTPM.Backend.repository.UserRepository;
+import KTPM.Backend.service.ApartmentOwnershipService;
 
 @Service
 public class ResidentTemporaryResidentService {
@@ -22,15 +23,16 @@ public class ResidentTemporaryResidentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ApartmentOwnershipService apartmentOwnershipService;
+
     public List<ResidentTemporaryResidentResponse> getTemporaryResidents(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
-        List<TemporaryResident> temporaryResidents = temporaryResidentRepository.findByApartment(user.getApartment());
+        List<TemporaryResident> temporaryResidents = temporaryResidentRepository.findByOwnership(ownership);
         return temporaryResidents.stream()
                 .map(tr -> new ResidentTemporaryResidentResponse(
                     tr.getTemporaryResidentId(),
@@ -42,7 +44,7 @@ public class ResidentTemporaryResidentService {
                     tr.getStartDate(),
                     tr.getEndDate(),
                     tr.getReason(),
-                    tr.getApartment().getApartmentCode()
+                    tr.getOwnership().getApartment().getApartmentCode()
                 ))
                 .collect(Collectors.toList());
     }
@@ -51,10 +53,7 @@ public class ResidentTemporaryResidentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        Apartment apartment = user.getApartment();
-        if (apartment == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         // Validate dates
         if (request.getStartDate().isAfter(request.getEndDate())) {
@@ -62,7 +61,7 @@ public class ResidentTemporaryResidentService {
         }
 
         TemporaryResident temporaryResident = new TemporaryResident();
-        temporaryResident.setApartment(apartment);
+        temporaryResident.setOwnership(ownership);
         temporaryResident.setFullName(request.getFullName());
         temporaryResident.setBirthDate(request.getBirthDate());
         temporaryResident.setGender(request.getGender());
@@ -84,7 +83,7 @@ public class ResidentTemporaryResidentService {
             temporaryResident.getStartDate(),
             temporaryResident.getEndDate(),
             temporaryResident.getReason(),
-            temporaryResident.getApartment().getApartmentCode()
+            temporaryResident.getOwnership().getApartment().getApartmentCode()
         );
     }
 
@@ -92,15 +91,13 @@ public class ResidentTemporaryResidentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         TemporaryResident temporaryResident = temporaryResidentRepository.findById(temporaryResidentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người tạm trú"));
 
-        // Kiểm tra xem người tạm trú có thuộc căn hộ của user không
-        if (!temporaryResident.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+        // Kiểm tra xem người tạm trú có thuộc quyền sở hữu của user không
+        if (!temporaryResident.getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
             throw new RuntimeException("Không có quyền xóa thông tin tạm trú này");
         }
 
@@ -111,15 +108,13 @@ public class ResidentTemporaryResidentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        if (user.getApartment() == null) {
-            throw new RuntimeException("Người dùng chưa được gán căn hộ");
-        }
+        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
 
         TemporaryResident temporaryResident = temporaryResidentRepository.findById(temporaryResidentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin tạm trú"));
 
-        // Kiểm tra xem temporary resident có thuộc căn hộ của user không
-        if (!temporaryResident.getApartment().getApartmentId().equals(user.getApartment().getApartmentId())) {
+        // Kiểm tra xem temporary resident có thuộc quyền sở hữu của user không
+        if (!temporaryResident.getOwnership().getOwnershipId().equals(ownership.getOwnershipId())) {
             throw new RuntimeException("Không có quyền cập nhật thông tin tạm trú này");
         }
 
@@ -149,7 +144,7 @@ public class ResidentTemporaryResidentService {
             temporaryResident.getStartDate(),
             temporaryResident.getEndDate(),
             temporaryResident.getReason(),
-            temporaryResident.getApartment().getApartmentCode()
+            temporaryResident.getOwnership().getApartment().getApartmentCode()
         );
     }
 } 
