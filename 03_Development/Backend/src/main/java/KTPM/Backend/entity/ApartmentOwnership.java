@@ -1,6 +1,10 @@
 package KTPM.Backend.entity;
 
 import java.time.LocalDate;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,10 +28,12 @@ public class ApartmentOwnership {
 
     @ManyToOne
     @JoinColumn(name = "apartment_id", nullable = false)
+    @JsonBackReference(value = "apartment-ownerships")
     private Apartment apartment;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference(value = "user-ownerships")
     private User user;
 
     @Column(name = "start_date", nullable = false)
@@ -37,6 +43,10 @@ public class ApartmentOwnership {
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition = "ENUM('active', 'inactive') DEFAULT 'active'")
     private Status status = Status.active;
+
+    @OneToMany(mappedBy = "ownership")
+    @JsonManagedReference(value = "ownership-details")
+    private List<PaymentDetail> paymentDetails;
 } 

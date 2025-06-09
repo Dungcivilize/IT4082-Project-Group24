@@ -126,7 +126,7 @@ public class ResidentVehicleService {
 
         // Kiểm tra biển số xe đã tồn tại chưa (nếu có thay đổi)
         if (!request.getLicensePlate().equals(vehicle.getLicensePlate()) &&
-                vehicleRepository.existsByLicensePlate(request.getLicensePlate())) {
+            vehicleRepository.existsByLicensePlate(request.getLicensePlate())) {
             throw new RuntimeException("Biển số xe đã tồn tại trong hệ thống");
         }
 

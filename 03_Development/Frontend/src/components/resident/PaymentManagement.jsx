@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API_URL } from '../../constants/api';
 import '../../styles/Resident.css';
 import QRCodeImage from '../../assets/QRCode.jpg';
+import { TableCell, Chip } from '@mui/material';
 
 const PaymentManagement = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -32,8 +33,8 @@ const PaymentManagement = () => {
       // Lọc ra các khoản phí chưa thanh toán hoặc đang xử lý
       const pendingPayments = response.data.filter(
         (payment) =>
-          payment.paymentStatus === 'UNPAID' ||
-          payment.paymentStatus === 'PROCESSING'
+          payment.status === 'UNPAID' ||
+          payment.status === 'PROCESSING'
       );
       setPendingPayments(pendingPayments);
       setError('');
@@ -56,7 +57,7 @@ const PaymentManagement = () => {
       );
       // Chỉ lấy các khoản phí đã thanh toán thành công
       const paidPayments = response.data.filter(
-        (payment) => payment.paymentStatus === 'PAID'
+        (payment) => payment.status === 'PAID'
       );
       setPaymentHistory(paidPayments);
     } catch (error) {
@@ -109,11 +110,12 @@ const PaymentManagement = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+  const formatNumber = (value) => {
+    return value ? value.toLocaleString('vi-VN') : '0';
+  };
+
+  const formatCurrency = (value) => {
+    return value ? `${value.toLocaleString('vi-VN')} VND` : '0 VND';
   };
 
   const formatDateTime = (dateTimeStr) => {
@@ -123,14 +125,14 @@ const PaymentManagement = () => {
 
   const getStatusText = (status) => {
     switch (status?.toUpperCase()) {
-      case 'PAID':
-        return 'Đã thanh toán';
-      case 'PROCESSING':
-        return 'Đang xử lý';
       case 'UNPAID':
         return 'Chưa thanh toán';
+      case 'PROCESSING':
+        return 'Đang xử lý';
+      case 'PAID':
+        return 'Đã thanh toán';
       default:
-        return status || 'Không xác định';
+        return 'Không xác định';
     }
   };
 
@@ -160,26 +162,33 @@ const PaymentManagement = () => {
       <div className="payment-header">
         <h3>{payment.serviceName}</h3>
         <span
-          className={`status-badge ${getStatusClass(payment.paymentStatus)}`}
+          className={`status-badge ${getStatusClass(payment.status)}`}
         >
-          {getStatusText(payment.paymentStatus)}
+          {getStatusText(payment.status)}
         </span>
       </div>
       <div className="payment-info">
-        <p>Loại dịch vụ: {getServiceTypeText(payment.serviceType)}</p>
+        <p>Loại dịch vụ: {payment.serviceTypeName}</p>
         <p>Kỳ thu: {payment.periodInfo}</p>
-        <p>Số lượng: {payment.amount}</p>
+        <p>Số lượng: {formatNumber(payment.amount)}</p>
         <p>Đơn giá: {formatCurrency(payment.unitPrice)}</p>
         <p className="total-price">
-          Tổng tiền: {formatCurrency(payment.totalPrice)}
+          Tổng tiền: {formatCurrency(payment.price)}
         </p>
         <p>Ngày tạo: {formatDateTime(payment.createdAt)}</p>
         {payment.transactionCode && (
           <p>Mã giao dịch: {payment.transactionCode}</p>
         )}
-        {payment.note && <p>Ghi chú: {payment.note}</p>}
+        {payment.paidAt && (
+          <p>Ngày thanh toán: {formatDateTime(payment.paidAt)}</p>
+        )}
+        {payment.note && payment.status === 'UNPAID' && (
+          <p className="payment-note warning">
+            <strong>Lưu ý:</strong> {payment.note}
+          </p>
+        )}
       </div>
-      {payment.paymentStatus === 'UNPAID' && (
+      {payment.status === 'UNPAID' && (
         <button
           className="pay-button"
           onClick={() => {
@@ -192,6 +201,37 @@ const PaymentManagement = () => {
       )}
     </div>
   );
+
+  const getStatusLabel = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'UNPAID':
+        return 'Chưa thanh toán';
+      case 'PROCESSING':
+        return 'Đang xử lý';
+      case 'PAID':
+        return 'Đã thanh toán';
+      default:
+        return 'Không xác định';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'UNPAID':
+        return 'error';
+      case 'PROCESSING':
+        return 'warning';
+      case 'PAID':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('vi-VN');
+  };
 
   return (
     <div className="payment-management">
@@ -279,7 +319,50 @@ const PaymentManagement = () => {
               <p>Chưa có lịch sử thanh toán</p>
             ) : (
               <div className="payment-grid">
-                {paymentHistory.map((payment) => renderPaymentCard(payment))}
+                {paymentHistory.map((payment) => (
+                  <div key={payment.paymentDetailId} className="payment-card">
+                    <div className="payment-header">
+                      <h3>{payment.serviceName}</h3>
+                      <span
+                        className={`status-badge ${getStatusClass(payment.status)}`}
+                      >
+                        {getStatusText(payment.status)}
+                      </span>
+                    </div>
+                    <div className="payment-info">
+                      <p>Loại dịch vụ: {payment.serviceTypeName}</p>
+                      <p>Kỳ thu: {payment.periodInfo}</p>
+                      <p>Số lượng: {formatNumber(payment.amount)}</p>
+                      <p>Đơn giá: {formatCurrency(payment.unitPrice)}</p>
+                      <p className="total-price">
+                        Tổng tiền: {formatCurrency(payment.price)}
+                      </p>
+                      <p>Ngày tạo: {formatDate(payment.createdAt)}</p>
+                      {payment.transactionCode && (
+                        <p>Mã giao dịch: {payment.transactionCode}</p>
+                      )}
+                      {payment.paidAt && (
+                        <p>Ngày thanh toán: {formatDate(payment.paidAt)}</p>
+                      )}
+                      {payment.note && (
+                        <p className="payment-note warning">
+                          <strong>Lưu ý:</strong> {payment.note}
+                        </p>
+                      )}
+                    </div>
+                    {payment.status === 'UNPAID' && (
+                      <button
+                        className="pay-button"
+                        onClick={() => {
+                          setSelectedPayment(payment);
+                          setTransactionCode('');
+                        }}
+                      >
+                        Thanh toán
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>

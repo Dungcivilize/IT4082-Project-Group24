@@ -3,6 +3,7 @@ package KTPM.Backend.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,15 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import KTPM.Backend.dto.ResidentPaymentDetailResponse;
 import KTPM.Backend.dto.ResidentPaymentRequest;
-import KTPM.Backend.entity.Payment;
 import KTPM.Backend.entity.PaymentDetail;
 import KTPM.Backend.entity.User;
 import KTPM.Backend.entity.ApartmentOwnership;
 import KTPM.Backend.repository.PaymentDetailRepository;
-import KTPM.Backend.repository.PaymentRepository;
 import KTPM.Backend.repository.UserRepository;
 import KTPM.Backend.service.ApartmentOwnershipService;
 import lombok.RequiredArgsConstructor;
+import KTPM.Backend.dto.PaymentDetailRequest;
+import KTPM.Backend.entity.*;
+import KTPM.Backend.repository.*;
+import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -28,22 +32,28 @@ public class ResidentPaymentService {
     private PaymentDetailRepository paymentDetailRepository;
 
     @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private ApartmentOwnershipService apartmentOwnershipService;
 
+    @Autowired
+    private ServiceTypeRepository serviceTypeRepository;
+
+    @Autowired
+    private ApartmentOwnershipRepository apartmentOwnershipRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
+
+    @Autowired
+    private PaymentPeriodRepository paymentPeriodRepository;
+
     public List<ResidentPaymentDetailResponse> getPendingPayments(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
-
-        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByOwnershipAndStatus(ownership, PaymentDetail.Status.pending);
-        return convertToResponse(paymentDetails);
+        List<ApartmentOwnership> ownerships = apartmentOwnershipService.getOwnershipsByUserId(userId);
+        List<PaymentDetail> pendingPayments = paymentDetailRepository.findByOwnershipInAndStatusIn(
+                ownerships, Arrays.asList(PaymentDetail.Status.UNPAID, PaymentDetail.Status.PROCESSING));
+        return convertToResponse(pendingPayments);
     }
 
     public List<ResidentPaymentDetailResponse> getPaymentHistory(Integer userId) {
@@ -57,45 +67,23 @@ public class ResidentPaymentService {
     }
 
     private List<ResidentPaymentDetailResponse> convertToResponse(List<PaymentDetail> paymentDetails) {
-        return paymentDetails.stream()
-                .map(pd -> new ResidentPaymentDetailResponse(
-                    pd.getPaymentDetailId(),
-                    pd.getPaymentPeriod().getMonth(),
-                    pd.getPaymentPeriod().getYear(),
-                    pd.getServiceType().getServiceName(),
-                    pd.getAmount(),
-                    pd.getServiceType().getUnitPrice(),
-                    pd.getAmount().multiply(pd.getServiceType().getUnitPrice()),
-                    pd.getStatus(),
-                    pd.getPayment() != null ? pd.getPayment().getStatus() : Payment.PaymentStatus.UNPAID,
-                    pd.getPayment() != null ? pd.getPayment().getTransactionCode() : null,
-                    pd.getPayment() != null ? pd.getPayment().getPaidAt() : null
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public List<ResidentPaymentDetailResponse> getPaymentDetails(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        ApartmentOwnership ownership = apartmentOwnershipService.getCurrentOwnershipByUserId(userId);
-
-        List<PaymentDetail> paymentDetails = paymentDetailRepository.findByOwnershipOwnershipId(ownership.getOwnershipId());
-        return paymentDetails.stream()
-                .map(pd -> new ResidentPaymentDetailResponse(
-                    pd.getPaymentDetailId(),
-                    pd.getPaymentPeriod().getMonth(),
-                    pd.getPaymentPeriod().getYear(),
-                    pd.getServiceType().getServiceName(),
-                    pd.getAmount(),
-                    pd.getServiceType().getUnitPrice(),
-                    pd.getAmount().multiply(pd.getServiceType().getUnitPrice()),
-                    pd.getStatus(),
-                    pd.getPayment() != null ? pd.getPayment().getStatus() : null,
-                    pd.getPayment() != null ? pd.getPayment().getTransactionCode() : null,
-                    pd.getPayment() != null ? pd.getPayment().getPaidAt() : null
-                ))
-                .collect(Collectors.toList());
+        return paymentDetails.stream().map(pd -> {
+            return ResidentPaymentDetailResponse.builder()
+                .paymentDetailId(pd.getPaymentDetailId())
+                .periodInfo(String.format("%02d/%d", pd.getPaymentPeriod().getMonth(), pd.getPaymentPeriod().getYear()))
+                .serviceTypeName(pd.getServiceType().getServiceName())
+                .amount(pd.getAmount())
+                .unitPrice(pd.getServiceType().getUnitPrice())
+                .price(pd.getAmount().multiply(pd.getServiceType().getUnitPrice()))
+                .status(pd.getStatus())
+                .transactionCode(pd.getTransactionCode())
+                .createdAt(pd.getCreatedAt())
+                .paidAt(pd.getPaidAt())
+                .apartmentCode(pd.getOwnership().getApartment().getApartmentCode())
+                .ownerName(pd.getOwnership().getUser().getFullName())
+                .note(pd.getNote())
+                .build();
+        }).collect(Collectors.toList());
     }
 
     @Transactional
@@ -113,47 +101,65 @@ public class ResidentPaymentService {
             throw new RuntimeException("Không có quyền thanh toán khoản phí này");
         }
 
-        // Kiểm tra trạng thái payment detail
-        if (paymentDetail.getStatus() != PaymentDetail.Status.pending) {
+        // Kiểm tra trạng thái
+        if (paymentDetail.getStatus() != PaymentDetail.Status.UNPAID) {
             throw new RuntimeException("Khoản phí này không ở trạng thái chờ thanh toán");
         }
 
-        // Tính tổng tiền
-        BigDecimal totalPrice = paymentDetail.getAmount().multiply(paymentDetail.getServiceType().getUnitPrice());
+        // Cập nhật thông tin thanh toán
+        paymentDetail.setTransactionCode(request.getTransactionCode());
+        paymentDetail.setStatus(PaymentDetail.Status.PROCESSING);
+        paymentDetail.setPaidAt(LocalDateTime.now());
 
-        // Tạo hoặc cập nhật payment
-        Payment payment = paymentDetail.getPayment();
-        if (payment == null) {
-            payment = new Payment();
-            payment.setPaymentDetail(paymentDetail);
-            payment.setPrice(totalPrice);
-            paymentDetail.setPayment(payment);
+        // Lưu thay đổi
+        paymentDetail = paymentDetailRepository.save(paymentDetail);
+
+        return ResidentPaymentDetailResponse.builder()
+            .paymentDetailId(paymentDetail.getPaymentDetailId())
+            .periodInfo(String.format("%02d/%d", paymentDetail.getPaymentPeriod().getMonth(), paymentDetail.getPaymentPeriod().getYear()))
+            .serviceTypeName(paymentDetail.getServiceType().getServiceName())
+            .amount(paymentDetail.getAmount())
+            .unitPrice(paymentDetail.getServiceType().getUnitPrice())
+            .price(paymentDetail.getAmount().multiply(paymentDetail.getServiceType().getUnitPrice()))
+            .status(paymentDetail.getStatus())
+            .transactionCode(paymentDetail.getTransactionCode())
+            .createdAt(paymentDetail.getCreatedAt())
+            .paidAt(paymentDetail.getPaidAt())
+            .apartmentCode(paymentDetail.getOwnership().getApartment().getApartmentCode())
+            .ownerName(paymentDetail.getOwnership().getUser().getFullName())
+            .note(paymentDetail.getNote())
+            .build();
+    }
+
+    @Transactional
+    public PaymentDetail createPaymentDetail(PaymentDetailRequest request) {
+        ServiceType serviceType = serviceTypeRepository.findById(request.getServiceTypeId())
+                .orElseThrow(() -> new EntityNotFoundException("Service type not found"));
+
+        ApartmentOwnership ownership = apartmentOwnershipRepository.findById(request.getOwnershipId())
+                .orElseThrow(() -> new EntityNotFoundException("Apartment ownership not found"));
+
+        PaymentPeriod paymentPeriod = paymentPeriodRepository.findById(request.getPaymentPeriodId())
+                .orElseThrow(() -> new EntityNotFoundException("Payment period not found"));
+
+        PaymentDetail paymentDetail = new PaymentDetail();
+        paymentDetail.setServiceType(serviceType);
+        paymentDetail.setOwnership(ownership);
+        paymentDetail.setPaymentPeriod(paymentPeriod);
+        paymentDetail.setStatus(PaymentDetail.Status.UNPAID);
+        paymentDetail.setCreatedAt(LocalDateTime.now());
+
+        // Tự động tính toán số tiền cho phí xe máy và ô tô
+        if (serviceType.getServiceTypeId() == 3) { // Phí xe máy
+            int motorbikes = vehicleRepository.countActiveVehiclesByOwnershipAndType(ownership.getOwnershipId(), Vehicle.VehicleType.motorcycle);
+            paymentDetail.setAmount(BigDecimal.valueOf(motorbikes));
+        } else if (serviceType.getServiceTypeId() == 4) { // Phí ô tô
+            int cars = vehicleRepository.countActiveVehiclesByOwnershipAndType(ownership.getOwnershipId(), Vehicle.VehicleType.car);
+            paymentDetail.setAmount(BigDecimal.valueOf(cars));
+        } else {
+            paymentDetail.setAmount(BigDecimal.valueOf(request.getAmount()));
         }
 
-        // Kiểm tra trạng thái payment
-        if (payment.getStatus() != Payment.PaymentStatus.UNPAID) {
-            throw new RuntimeException("Khoản phí này đã được gửi yêu cầu thanh toán");
-        }
-
-        // Cập nhật payment
-        payment.setTransactionCode(request.getTransactionCode());
-        payment.setPaidAt(LocalDateTime.now());
-        payment.setStatus(Payment.PaymentStatus.PROCESSING);
-
-        payment = paymentRepository.save(payment);
-
-        return new ResidentPaymentDetailResponse(
-            paymentDetail.getPaymentDetailId(),
-            paymentDetail.getPaymentPeriod().getMonth(),
-            paymentDetail.getPaymentPeriod().getYear(),
-            paymentDetail.getServiceType().getServiceName(),
-            paymentDetail.getAmount(),
-            paymentDetail.getServiceType().getUnitPrice(),
-            totalPrice,
-            paymentDetail.getStatus(),
-            payment.getStatus(),
-            payment.getTransactionCode(),
-            payment.getPaidAt()
-        );
+        return paymentDetailRepository.save(paymentDetail);
     }
 } 

@@ -13,6 +13,7 @@ const PersonalInfo = () => {
     email: '',
     fullName: '',
     phone: '',
+    role: ''
   })
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -51,11 +52,14 @@ const PersonalInfo = () => {
           userId: user.userId,
           email: profile.email,
           fullName: profile.fullName,
-          phone: profile.phone
+          phone: profile.phone,
+          role: user.role
         })
 
-        const residentsData = await getResidentsByUser(user.userId)
-        setResidents(residentsData)
+        if (user.role === 'resident') {
+          const residentsData = await getResidentsByUser(user.userId)
+          setResidents(residentsData)
+        }
       } catch (error) {
         setError('Có lỗi khi tải thông tin người dùng')
       }
@@ -379,14 +383,16 @@ const PersonalInfo = () => {
           className={`tab ${activeTab === 'owner' ? 'active' : ''}`}
           onClick={() => setActiveTab('owner')}
         >
-          Thông tin chủ hộ
+          Thông tin cá nhân
         </button>
-        <button 
-          className={`tab ${activeTab === 'members' ? 'active' : ''}`}
-          onClick={() => setActiveTab('members')}
-        >
-          Thông tin thành viên
-        </button>
+        {userProfile.role === 'resident' && (
+          <button 
+            className={`tab ${activeTab === 'members' ? 'active' : ''}`}
+            onClick={() => setActiveTab('members')}
+          >
+            Thông tin thành viên
+          </button>
+        )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -474,7 +480,7 @@ const PersonalInfo = () => {
         </div>
       )}
 
-      {activeTab === 'members' && (
+      {activeTab === 'members' && userProfile.role === 'resident' && (
         <div className="members-section">
           {!isAddingResident && !editingResidentId && (
             <button onClick={() => setIsAddingResident(true)} className="add-button">

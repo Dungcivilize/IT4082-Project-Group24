@@ -1,7 +1,18 @@
 package KTPM.Backend.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,10 +20,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "payment_period")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class PaymentPeriod {
-    public enum PaymentPeriodStatus {
-        collecting, completed
+    public enum Status {
+        collecting,
+        completed
     }
 
     @Id
@@ -27,9 +38,13 @@ public class PaymentPeriod {
     private Integer year;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private PaymentPeriodStatus status = PaymentPeriodStatus.collecting;
+    @Column(name = "status", columnDefinition = "ENUM('collecting', 'completed') DEFAULT 'collecting'")
+    private Status status = Status.collecting;
 
-    @Column(name = "note", columnDefinition = "TEXT")
+    @Column(name = "note")
     private String note;
+
+    @OneToMany(mappedBy = "paymentPeriod")
+    @JsonManagedReference(value = "payment-period-details")
+    private List<PaymentDetail> paymentDetails;
 } 

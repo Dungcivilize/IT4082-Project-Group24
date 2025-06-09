@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Vehicle {
     public enum VehicleType {
-        car, motorcycle, bicycle
+        car, motorcycle
     }
 
     @Id

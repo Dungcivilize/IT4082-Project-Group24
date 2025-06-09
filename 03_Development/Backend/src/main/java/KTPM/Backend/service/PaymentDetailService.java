@@ -72,7 +72,7 @@ public class PaymentDetailService {
         paymentDetail.setOwnership(ownership);
         paymentDetail.setServiceType(serviceType);
         paymentDetail.setAmount(BigDecimal.valueOf(amount));
-        paymentDetail.setStatus(PaymentDetail.Status.pending);
+        paymentDetail.setStatus(PaymentDetail.Status.UNPAID);
         paymentDetail.setCreatedAt(LocalDateTime.now());
 
         return paymentDetailRepository.save(paymentDetail);
@@ -82,7 +82,7 @@ public class PaymentDetailService {
     public PaymentDetail updatePaymentDetail(Integer id, Double amount) {
         PaymentDetail paymentDetail = getPaymentDetailById(id);
 
-        if (paymentDetail.getStatus() == PaymentDetail.Status.paid) {
+        if (paymentDetail.getStatus() == PaymentDetail.Status.PAID) {
             throw new RuntimeException("Không thể cập nhật chi tiết thanh toán đã thanh toán");
         }
 
@@ -94,7 +94,7 @@ public class PaymentDetailService {
     public void deletePaymentDetail(Integer id) {
         PaymentDetail paymentDetail = getPaymentDetailById(id);
 
-        if (paymentDetail.getStatus() == PaymentDetail.Status.paid) {
+        if (paymentDetail.getStatus() == PaymentDetail.Status.PAID) {
             throw new RuntimeException("Không thể xóa chi tiết thanh toán đã thanh toán");
         }
 
