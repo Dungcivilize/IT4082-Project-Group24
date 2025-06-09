@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./CreatePaymentPeriod.css";
 
 function CreatePaymentPeriod({ onCreated }) {
+  const [showForm, setShowForm] = useState(false);
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
   const [note, setNote] = useState("");
@@ -30,6 +31,7 @@ function CreatePaymentPeriod({ onCreated }) {
       setMonth("");
       setYear("");
       setNote("");
+      setShowForm(false);  // Ẩn form sau khi tạo thành công
     } catch (err) {
       setError(err.message);
     } finally {
@@ -38,54 +40,74 @@ function CreatePaymentPeriod({ onCreated }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="cpp-form">
-      <h2 className="cpp-title">Tạo đợt thu phí mới</h2>
+    <div className="cpp-container">
+      {!showForm && (
+        <button className="cpp-toggle-btn" onClick={() => setShowForm(true)}>
+          + Tạo đợt thu phí mới
+        </button>
+      )}
 
-      <div className="cpp-field">
-        <label className="cpp-label" htmlFor="month-input">Tháng:</label>
-        <input
-          id="month-input"
-          className="cpp-input"
-          type="number"
-          min="1"
-          max="12"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          required
-        />
-      </div>
+      {showForm && (
+        <form onSubmit={handleSubmit} className="cpp-form">
+          <h2 className="cpp-title">Tạo đợt thu phí mới</h2>
 
-      <div className="cpp-field">
-        <label className="cpp-label" htmlFor="year-input">Năm:</label>
-        <input
-          id="year-input"
-          className="cpp-input"
-          type="number"
-          min="2000"
-          max="2100"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          required
-        />
-      </div>
+          <div className="cpp-field">
+            <label className="cpp-label" htmlFor="month-input">Tháng:</label>
+            <input
+              id="month-input"
+              className="cpp-input"
+              type="number"
+              min="1"
+              max="12"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              required
+            />
+          </div>
 
-      <div className="cpp-field">
-        <label className="cpp-label" htmlFor="note-input">Ghi chú:</label>
-        <input
-          id="note-input"
-          className="cpp-input"
-          type="text"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </div>
+          <div className="cpp-field">
+            <label className="cpp-label" htmlFor="year-input">Năm:</label>
+            <input
+              id="year-input"
+              className="cpp-input"
+              type="number"
+              min="2000"
+              max="2100"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              required
+            />
+          </div>
 
-      <button type="submit" className="cpp-submit-btn" disabled={loading}>
-        {loading ? "Đang tạo..." : "Tạo đợt thu phí"}
-      </button>
+          <div className="cpp-field">
+            <label className="cpp-label" htmlFor="note-input">Ghi chú:</label>
+            <input
+              id="note-input"
+              className="cpp-input"
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
 
-      {error && <p className="cpp-error">{error}</p>}
-    </form>
+          <div className="cpp-buttons">
+            <button type="submit" className="cpp-submit-btn" disabled={loading}>
+              {loading ? "Đang tạo..." : "Tạo đợt thu phí"}
+            </button>
+            <button
+              type="button"
+              className="cpp-cancel-btn"
+              onClick={() => setShowForm(false)}
+              disabled={loading}
+            >
+              Hủy
+            </button>
+          </div>
+
+          {error && <p className="cpp-error">{error}</p>}
+        </form>
+      )}
+    </div>
   );
 }
 

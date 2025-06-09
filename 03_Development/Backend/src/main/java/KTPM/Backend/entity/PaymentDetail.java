@@ -3,6 +3,7 @@ package KTPM.Backend.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,5 +47,6 @@ public class PaymentDetail {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "paymentDetail", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Payment payment;
 } 

@@ -1,0 +1,65 @@
+.processing-payments-container {
+  padding: 2rem;
+  background-color: #fdfdfd;
+}
+
+.processing-payments-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.processing-payments-empty {
+  font-style: italic;
+  color: #888;
+}
+
+.processing-payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+.processing-payments-table th,
+.processing-payments-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.processing-payments-table th {
+  background-color: #f1f1f1;
+  font-weight: bold;
+}
+
+.processing-payments-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.approve-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 6px 12px;
+  margin-right: 8px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.reject-button {
+  background-color: #f44336;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.approve-button:hover {
+  background-color: #45a049;
+}
+
+.reject-button:hover {
+  background-color: #e53935;
+}

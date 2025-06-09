@@ -10,6 +10,7 @@ import PaymentManagement from './components/resident/PaymentManagement'
 import AccountantPage from './components/accountant/AccountantPage' 
 import AccountantLayout from './components/accountant/AccountantLayout'
 import PaymentPeriods from './components/accountant/PaymentPeriods'
+import ProcessingPayments from './components/accountant/ProcessingPayments'
 
 import './App.css'
 
@@ -32,6 +33,7 @@ function App() {
         {/* Routes cho Kế toán */}
         <Route path="/accountant" element={<AccountantLayout />}>
           <Route path="payment-periods" element={<PaymentPeriods />} />
+            <Route path="processing-payments" element={<ProcessingPayments />} />
           <Route index element={<Navigate to="payment-periods" replace />} />
         </Route>
       </Routes>

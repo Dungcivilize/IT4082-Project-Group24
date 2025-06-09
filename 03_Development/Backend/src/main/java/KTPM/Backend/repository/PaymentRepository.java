@@ -1,5 +1,6 @@
 package KTPM.Backend.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,6 @@ import KTPM.Backend.entity.PaymentDetail;
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     Optional<Payment> findByPaymentDetail(PaymentDetail paymentDetail);
     boolean existsByPaymentDetail(PaymentDetail paymentDetail);
+
+    List<Payment> findByStatus(Payment.PaymentStatus status);
 } 

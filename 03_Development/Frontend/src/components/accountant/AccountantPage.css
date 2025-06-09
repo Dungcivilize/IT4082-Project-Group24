@@ -1,41 +1,50 @@
 .accountant-container {
-  padding: 1.5rem;
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fafbfc;
+  max-width: 960px;
+  margin: 0 auto;
+  color: #333;
 }
 
 .accountant-title {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #333;
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #2c3e50;
 }
 
 .period-list {
   list-style: none;
   padding: 0;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  justify-content: center;
 }
 
 .period-button {
-  padding: 0.5rem 1.2rem;
-  background-color: #eee;
-  color: #333;
+  padding: 0.6rem 1.5rem;
+  background-color: #e3e8ef;
+  color: #34495e;
   border: none;
-  border-radius: 6px;
+  border-radius: 30px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-weight: 600;
+  transition: background-color 0.3s, color 0.3s;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
 }
 
 .period-button:hover {
-  background-color: #ddd;
+  background-color: #cdd7e6;
 }
 
 .period-button.active {
   background-color: #1976d2;
-  color: white;
+  color: #fff;
+  box-shadow: 0 4px 8px rgb(25 118 210 / 0.4);
 }
 
 .period-details {
@@ -43,37 +52,69 @@
 }
 
 .period-subtitle {
-  font-size: 1.5rem;
-  margin-bottom: 1.2rem;
-  color: #222;
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+  color: #34495e;
+  font-weight: 600;
+  text-align: center;
 }
 
 .apartment-block {
   margin-bottom: 2rem;
-  padding: 1rem;
+  padding: 1.5rem;
   background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+  border: 1px solid #e0e0e0;
 }
 
 .apartment-title {
-  margin-bottom: 0.8rem;
-  font-size: 1.2rem;
-  color: #444;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .invoice-table {
   width: 100%;
-  border-collapse: collapse;
-  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0 6px;
 }
 
-.invoice-table thead {
-  background-color: #f0f0f0;
+.invoice-table thead tr {
+  background-color: #1976d2;
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
 }
 
 .invoice-table th,
 .invoice-table td {
-  border: 1px solid #ccc;
-  padding: 0.6rem;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.invoice-table tbody tr {
+  background-color: #f9fbfc;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.invoice-table tbody tr:hover {
+  background-color: #e3f2fd;
+}
+
+.invoice-table td {
+  color: #555;
+}
+
+.invoice-table td.status-paid {
+  color: #27ae60;
+  font-weight: 700;
+}
+
+.invoice-table td.status-pending {
+  color: #f39c12;
+  font-weight: 700;
 }
