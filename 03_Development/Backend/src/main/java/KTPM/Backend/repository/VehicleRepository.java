@@ -17,4 +17,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
 
     @Query("SELECT COUNT(v) FROM Vehicle v WHERE v.ownership.ownershipId = :ownershipId AND v.type = :type")
     int countActiveVehiclesByOwnershipAndType(@Param("ownershipId") Integer ownershipId, @Param("type") Vehicle.VehicleType type);
+
+    List<Vehicle> findAllByOwnership_OwnershipId(Integer ownershipId);
 } 

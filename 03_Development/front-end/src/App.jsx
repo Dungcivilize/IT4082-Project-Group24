@@ -13,6 +13,7 @@ import Layout from './components/admin/Layout';
 import UserList from './pages/Users/UserList';
 import CreateUser from './pages/Users/CreateUser';
 import AdminDashboard from './components/admin/AdminDashboard';
+import ManageHousehold from './pages/Residents/ManageHousehold';
 function App() {
   return (
     <Router>
@@ -23,6 +24,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users/list" element={<UserList />} />
           <Route path="users/add" element={<CreateUser />} />
+          <Route path="households" element={<ManageHousehold />} />
         </Route>
 
         

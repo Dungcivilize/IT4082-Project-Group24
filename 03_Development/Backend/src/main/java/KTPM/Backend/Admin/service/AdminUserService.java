@@ -1,6 +1,7 @@
 package KTPM.Backend.Admin.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -53,7 +54,7 @@ public class AdminUserService {
 
     // Cập nhật user
     @Transactional
-    public User updateUser(Long userId, AdminUserDTOrequest dto) throws Exception {
+    public User updateUser(Integer userId, AdminUserDTOrequest dto) throws Exception {
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (!optionalUser.isPresent()) {
@@ -67,7 +68,7 @@ public class AdminUserService {
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
         user.setPhone(dto.getPhone());
-        user.setRole(dto.getRole());
+        user.setRole(User.Role.valueOf(dto.getRole()));
 
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             // Thường bạn cần mã hóa password trước khi lưu
