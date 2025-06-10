@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { getResidentPayments, getResidentPaymentsByStatus } from '../../api/paymentStatus';
 import { API_URL } from '../../constants/api';
 import '../../styles/Resident.css';
 import QRCodeImage from '../../assets/QRCode.jpg';
 import { TableCell, Chip } from '@mui/material';
+import axios from 'axios';
 
 const PaymentManagement = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -27,11 +28,15 @@ const PaymentManagement = () => {
         return;
       }
 
-      const response = await axios.get(
-        `${API_URL}/residents/payments/pending?userId=${user.userId}`
-      );
+      const ownershipId = user.ownershipId;
+      if (!ownershipId) {
+        setError('Không tìm thấy thông tin quyền sở hữu');
+        return;
+      }
+
+      const payments = await getResidentPayments(ownershipId);
       // Lọc ra các khoản phí chưa thanh toán hoặc đang xử lý
-      const pendingPayments = response.data.filter(
+      const pendingPayments = payments.filter(
         (payment) =>
           payment.status === 'UNPAID' ||
           payment.status === 'PROCESSING'
@@ -52,14 +57,14 @@ const PaymentManagement = () => {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user?.userId) return;
 
-      const response = await axios.get(
-        `${API_URL}/residents/payments/history?userId=${user.userId}`
-      );
-      // Chỉ lấy các khoản phí đã thanh toán thành công
-      const paidPayments = response.data.filter(
-        (payment) => payment.status === 'PAID'
-      );
-      setPaymentHistory(paidPayments);
+      const ownershipId = user.ownershipId;
+      if (!ownershipId) {
+        setError('Không tìm thấy thông tin quyền sở hữu');
+        return;
+      }
+
+      const payments = await getResidentPaymentsByStatus(ownershipId, 'PAID');
+      setPaymentHistory(payments);
     } catch (error) {
       console.error('Lỗi khi tải lịch sử thanh toán:', error);
       setError(

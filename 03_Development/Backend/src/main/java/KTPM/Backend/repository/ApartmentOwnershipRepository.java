@@ -27,4 +27,12 @@ public interface ApartmentOwnershipRepository extends JpaRepository<ApartmentOwn
     List<ApartmentOwnership> findByApartmentApartmentId(Integer apartmentId);
 
     List<ApartmentOwnership> findByUserUserId(Integer userId);
+
+    @Query("SELECT ao FROM ApartmentOwnership ao " +
+           "WHERE (ao.apartment.apartmentId, ao.startDate) IN " +
+           "(SELECT ao2.apartment.apartmentId, MAX(ao2.startDate) " +
+           "FROM ApartmentOwnership ao2 " +
+           "GROUP BY ao2.apartment.apartmentId) " +
+           "ORDER BY ao.apartment.apartmentCode")
+    List<ApartmentOwnership> findLatestOwnershipForEachApartment();
 } 

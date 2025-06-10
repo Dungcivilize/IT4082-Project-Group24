@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "payment_detail")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PaymentDetail {
     public enum Status {
         UNPAID,         // Chưa thanh toán
@@ -36,13 +36,13 @@ public class PaymentDetail {
     private PaymentPeriod paymentPeriod;
 
     @ManyToOne
+    @JoinColumn(name = "service_type_id", nullable = false)
+    private ServiceType serviceType;
+
+    @ManyToOne
     @JoinColumn(name = "ownership_id", nullable = false)
     @JsonBackReference(value = "ownership-details")
     private ApartmentOwnership ownership;
-
-    @ManyToOne
-    @JoinColumn(name = "service_type_id", nullable = false)
-    private ServiceType serviceType;
 
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
@@ -52,7 +52,7 @@ public class PaymentDetail {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private Status status;
+    private Status status = Status.UNPAID;
 
     @Column(name = "transaction_code")
     private String transactionCode;
@@ -63,11 +63,20 @@ public class PaymentDetail {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
-    @Column(name = "note",nullable = true)
+    @Column(name = "note", nullable = true)
     private String note;
 
     @PrePersist
+    protected void onPrePersist() {
+        createdAt = LocalDateTime.now();
+        calculatePrice();
+    }
+
     @PreUpdate
+    protected void onPreUpdate() {
+        calculatePrice();
+    }
+
     private void calculatePrice() {
         if (this.amount != null && this.serviceType != null && this.serviceType.getUnitPrice() != null) {
             this.price = this.amount.multiply(this.serviceType.getUnitPrice());

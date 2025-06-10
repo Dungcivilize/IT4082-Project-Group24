@@ -22,9 +22,6 @@ public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, In
     // Tìm theo căn hộ
     List<PaymentDetail> findByOwnershipOwnershipId(Integer ownershipId);
     
-    // Tìm theo trạng thái
-    List<PaymentDetail> findByStatus(Status status);
-    
     // Tìm theo trạng thái và kỳ thu phí
     List<PaymentDetail> findByStatusAndPaymentPeriodPaymentPeriodId(Status status, Integer paymentPeriodId);
     
@@ -50,6 +47,29 @@ public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, In
     
     Optional<PaymentDetail> findByPaymentPeriodAndOwnershipAndServiceType(PaymentPeriod paymentPeriod, ApartmentOwnership ownership, ServiceType serviceType);
 
+    // Tìm theo danh sách ownership
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.ownership IN :ownerships AND pd.paymentPeriod.paymentPeriodId = :paymentPeriodId")
+    List<PaymentDetail> findByOwnershipInAndPaymentPeriodPaymentPeriodId(
+            @Param("ownerships") List<ApartmentOwnership> ownerships,
+            @Param("paymentPeriodId") Integer paymentPeriodId);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.ownership IN :ownerships")
+    List<PaymentDetail> findByOwnershipIn(@Param("ownerships") List<ApartmentOwnership> ownerships);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.status = :status AND pd.ownership IN :ownerships AND pd.paymentPeriod.paymentPeriodId = :paymentPeriodId")
+    List<PaymentDetail> findByStatusAndOwnershipInAndPaymentPeriodPaymentPeriodId(
+            @Param("status") Status status,
+            @Param("ownerships") List<ApartmentOwnership> ownerships,
+            @Param("paymentPeriodId") Integer paymentPeriodId);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.status = :status AND pd.ownership IN :ownerships")
+    List<PaymentDetail> findByStatusAndOwnershipIn(
+            @Param("status") Status status,
+            @Param("ownerships") List<ApartmentOwnership> ownerships);
+
+    // Tìm theo trạng thái
+    List<PaymentDetail> findByStatus(Status status);
+
     @Query("SELECT pd FROM PaymentDetail pd WHERE pd.ownership IN :ownerships AND pd.status = :status")
     List<PaymentDetail> findByOwnershipInAndStatus(
             @Param("ownerships") List<ApartmentOwnership> ownerships,
@@ -66,9 +86,6 @@ public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, In
             @Param("periodId") Integer periodId,
             @Param("ownershipId") Integer ownershipId);
 
-    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.paymentPeriod.paymentPeriodId = :periodId")
-    List<PaymentDetail> findByPaymentPeriodId(@Param("periodId") Integer periodId);
-
     @Query("SELECT pd FROM PaymentDetail pd WHERE pd.ownership.ownershipId = :ownershipId")
     List<PaymentDetail> findByOwnershipId(@Param("ownershipId") Integer ownershipId);
 
@@ -76,4 +93,39 @@ public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, In
     List<PaymentDetail> findByOwnershipInAndStatusIn(
             @Param("ownerships") List<ApartmentOwnership> ownerships,
             @Param("statuses") List<Status> statuses);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.ownership.apartment.apartmentCode = :apartmentCode")
+    List<PaymentDetail> findByApartmentCode(@Param("apartmentCode") String apartmentCode);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.paymentPeriod.paymentPeriodId = :paymentPeriodId")
+    List<PaymentDetail> findByPaymentPeriodId(@Param("paymentPeriodId") Integer paymentPeriodId);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.paymentPeriod.paymentPeriodId = :paymentPeriodId " +
+           "AND pd.ownership.apartment.apartmentCode = :apartmentCode")
+    List<PaymentDetail> findByPaymentPeriodIdAndApartmentCode(
+            @Param("paymentPeriodId") Integer paymentPeriodId,
+            @Param("apartmentCode") String apartmentCode);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.status = :status " +
+           "AND pd.paymentPeriod.paymentPeriodId = :paymentPeriodId")
+    List<PaymentDetail> findByStatusAndPaymentPeriodId(
+            @Param("status") Status status,
+            @Param("paymentPeriodId") Integer paymentPeriodId);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.status = :status " +
+           "AND pd.ownership.apartment.apartmentCode = :apartmentCode")
+    List<PaymentDetail> findByStatusAndApartmentCode(
+            @Param("status") Status status,
+            @Param("apartmentCode") String apartmentCode);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.status = :status " +
+           "AND pd.paymentPeriod.paymentPeriodId = :paymentPeriodId " +
+           "AND pd.ownership.apartment.apartmentCode = :apartmentCode")
+    List<PaymentDetail> findByStatusAndPaymentPeriodIdAndApartmentCode(
+            @Param("status") Status status,
+            @Param("paymentPeriodId") Integer paymentPeriodId,
+            @Param("apartmentCode") String apartmentCode);
+
+    @Query("SELECT pd FROM PaymentDetail pd WHERE pd.status = :status")
+    List<PaymentDetail> findAllByStatus(@Param("status") Status status);
 } 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { getAllPayments, getPaymentsByStatus, updatePaymentStatus, getPaymentPeriods, getApartments } from '../../api/paymentStatus'
-import { Modal, Input, Select } from 'antd'
+import { getAccountantPayments, getAccountantPaymentsByStatus, updatePaymentStatus, updatePaymentDetail, getPaymentPeriods, getApartments } from '../../api/paymentStatus'
+import { getApartmentOwnerships } from '../../api/ownership'
+import { Modal, Input, Select, InputNumber } from 'antd'
 import '../../styles/PaymentStatus.css'
 
 const { Option } = Select
@@ -19,6 +20,9 @@ const PaymentStatusManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [note, setNote] = useState('')
   const [action, setAction] = useState('')
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [editAmount, setEditAmount] = useState(null)
+  const [editNote, setEditNote] = useState('')
 
   useEffect(() => {
     loadPayments()
@@ -45,14 +49,32 @@ const PaymentStatusManagement = () => {
     try {
       setLoading(true)
       setError('')
-      const filters = {
-        ...(selectedPeriod && { paymentPeriodId: selectedPeriod }),
-        ...(selectedApartment && { ownershipId: selectedApartment })
+      let data = []
+      
+      if (selectedApartment) {
+        // Lấy tất cả ownership của apartment được chọn
+        const ownerships = await getApartmentOwnerships(selectedApartment)
+        const ownershipIds = ownerships.map(o => o.ownershipId)
+        
+        // Lấy payments cho từng ownership và gộp lại
+        const filters = {
+          ...(selectedPeriod && { paymentPeriodId: selectedPeriod }),
+          ownershipIds: ownershipIds.join(',') // Chuyển mảng thành chuỗi
+        }
+        
+        data = selectedStatus ? 
+          await getAccountantPaymentsByStatus(selectedStatus, filters) :
+          await getAccountantPayments(filters)
+      } else {
+        const filters = {
+          ...(selectedPeriod && { paymentPeriodId: selectedPeriod })
+        }
+        
+        data = selectedStatus ? 
+          await getAccountantPaymentsByStatus(selectedStatus, filters) :
+          await getAccountantPayments(filters)
       }
       
-      const data = selectedStatus ? 
-        await getPaymentsByStatus(selectedStatus, filters) :
-        await getAllPayments(filters)
       setPayments(data)
     } catch (error) {
       setError(error.message)
@@ -111,6 +133,45 @@ const PaymentStatusManagement = () => {
     return value ? value.toLocaleString('vi-VN') : '0';
   }
 
+  const handlePaymentEdit = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      setSuccess('')
+
+      await updatePaymentDetail({
+        paymentDetailId: selectedPayment.paymentDetailId,
+        amount: editAmount,
+        note: editNote
+      })
+
+      setSuccess('Cập nhật hóa đơn thành công')
+      setEditModalVisible(false)
+      setSelectedPayment(null)
+      setEditAmount(null)
+      setEditNote('')
+      loadPayments()
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const showEditModal = (payment) => {
+    setSelectedPayment(payment)
+    setEditAmount(payment.amount)
+    setEditNote(payment.note || '')
+    setEditModalVisible(true)
+  }
+
+  const handleEditCancel = () => {
+    setEditModalVisible(false)
+    setSelectedPayment(null)
+    setEditAmount(null)
+    setEditNote('')
+  }
+
   return (
     <div className="payment-status-container">
       <h2>Theo dõi trạng thái thanh toán</h2>
@@ -145,9 +206,12 @@ const PaymentStatusManagement = () => {
             onChange={setSelectedApartment}
             style={{ width: 200 }}
           >
-            {apartments.map(ownership => (
-              <Select.Option key={ownership.ownershipId} value={ownership.ownershipId}>
-                {ownership.apartmentCode}
+            {apartments.map(apartment => (
+              <Select.Option 
+                key={apartment.apartmentId} 
+                value={apartment.apartmentId}
+              >
+                {apartment.apartmentCode}
               </Select.Option>
             ))}
           </Select>
@@ -183,6 +247,7 @@ const PaymentStatusManagement = () => {
                 <th>Kỳ thu phí</th>
                 <th>Dịch vụ</th>
                 <th>Số lượng</th>
+                <th>Đơn giá</th>
                 <th>Thành tiền</th>
                 <th>Trạng thái</th>
                 <th>Mã giao dịch</th>
@@ -199,6 +264,7 @@ const PaymentStatusManagement = () => {
                   <td>{payment.periodInfo}</td>
                   <td>{payment.serviceTypeName}</td>
                   <td>{formatNumber(payment.amount)}</td>
+                  <td>{formatCurrency(payment.unitPrice)}</td>
                   <td>{formatCurrency(payment.price)}</td>
                   <td>
                     <span className={`status ${payment.status?.toLowerCase()}`}>
@@ -229,6 +295,17 @@ const PaymentStatusManagement = () => {
                         </button>
                       </div>
                     )}
+                    {payment.status === 'UNPAID' && (
+                      <div className="action-buttons">
+                        <button
+                          className="edit-button"
+                          onClick={() => showEditModal(payment)}
+                          disabled={loading}
+                        >
+                          Sửa
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -237,38 +314,48 @@ const PaymentStatusManagement = () => {
         )}
       </div>
 
-      {isModalVisible && (
-        <Modal
-          visible={isModalVisible}
-          onCancel={handleCancel}
-          onOk={handlePaymentAction}
-          title={action === 'approve' ? "Duyệt thanh toán" : "Từ chối thanh toán"}
-          okText={action === 'approve' ? "Duyệt" : "Từ chối"}
-          cancelText="Hủy"
-        >
-          <div className="payment-detail-info">
-            <p><strong>Mã căn hộ:</strong> {selectedPayment?.apartmentCode}</p>
-            <p><strong>Chủ sở hữu:</strong> {selectedPayment?.ownerName}</p>
-            <p><strong>Kỳ thu phí:</strong> {selectedPayment?.periodInfo}</p>
-            <p><strong>Dịch vụ:</strong> {selectedPayment?.serviceTypeName}</p>
-            <p><strong>Số lượng:</strong> {formatNumber(selectedPayment?.amount)}</p>
-            <p><strong>Đơn giá:</strong> {formatCurrency(selectedPayment?.unitPrice)}</p>
-            <p><strong>Tổng tiền:</strong> {formatCurrency(selectedPayment?.price)}</p>
-            {selectedPayment?.transactionCode && (
-              <p><strong>Mã giao dịch:</strong> {selectedPayment.transactionCode}</p>
-            )}
-          </div>
-          <div className="note-input">
-            <label>Ghi chú:</label>
-            <Input.TextArea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={action === 'approve' ? "Nhập ghi chú nếu cần" : "Nhập lý do từ chối"}
-              rows={4}
-            />
-          </div>
-        </Modal>
-      )}
+      <Modal
+        title={action === 'approve' ? 'Duyệt thanh toán' : 'Từ chối thanh toán'}
+        open={isModalVisible}
+        onOk={handlePaymentAction}
+        onCancel={handleCancel}
+        confirmLoading={loading}
+      >
+        <div>
+          <p>Ghi chú:</p>
+          <Input.TextArea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Nhập ghi chú (nếu có)"
+            rows={4}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        title="Cập nhật hóa đơn"
+        open={editModalVisible}
+        onOk={handlePaymentEdit}
+        onCancel={handleEditCancel}
+        confirmLoading={loading}
+      >
+        <div>
+          <p>Số lượng:</p>
+          <InputNumber
+            value={editAmount}
+            onChange={setEditAmount}
+            min={0}
+            style={{ width: '100%' }}
+          />
+          <p>Ghi chú:</p>
+          <Input.TextArea
+            value={editNote}
+            onChange={(e) => setEditNote(e.target.value)}
+            placeholder="Nhập ghi chú (nếu có)"
+            rows={4}
+          />
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -1,56 +1,89 @@
 import axios from 'axios';
-import { API_URL } from '../constants/api';
 
-const PAYMENT_STATUS_API = `${API_URL}/accountant/payment-status`;
-const ACCOUNTANT_API = `${API_URL}/accountant`;
+const API_URL = 'http://localhost:8080/api';
 
-export const getAllPayments = async (filters = {}) => {
+// API cho cư dân
+export const getResidentPayments = async (ownershipId) => {
   try {
-    const response = await axios.get(PAYMENT_STATUS_API, {
-      params: filters
-    });
+    const response = await axios.get(`${API_URL}/resident/payment-status/${ownershipId}`);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Có lỗi xảy ra khi tải danh sách thanh toán');
+    console.error('Error fetching resident payments:', error);
+    throw error;
   }
 };
 
-export const getPaymentsByStatus = async (status, filters = {}) => {
+export const getResidentPaymentsByStatus = async (ownershipId, status) => {
   try {
-    const response = await axios.get(`${PAYMENT_STATUS_API}/by-status`, {
+    const response = await axios.get(`${API_URL}/resident/payment-status/${ownershipId}/by-status`, {
+      params: { status }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching resident payments by status:', error);
+    throw error;
+  }
+};
+
+// API cho kế toán
+export const getAccountantPayments = async (filters = {}) => {
+  try {
+    const response = await axios.get(`${API_URL}/accountant/payment-status`, { params: filters });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching accountant payments:', error);
+    throw error;
+  }
+};
+
+export const getAccountantPaymentsByStatus = async (status, filters = {}) => {
+  try {
+    const response = await axios.get(`${API_URL}/accountant/payment-status/by-status`, {
       params: { status, ...filters }
     });
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Có lỗi xảy ra khi tải danh sách thanh toán');
+    console.error('Error fetching accountant payments by status:', error);
+    throw error;
   }
 };
 
-export const updatePaymentStatus = async (request) => {
-  try {
-    const response = await axios.put(`${PAYMENT_STATUS_API}/update`, request);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật trạng thái thanh toán');
-  }
-};
-
-// API để lấy danh sách kỳ thu phí
 export const getPaymentPeriods = async () => {
   try {
-    const response = await axios.get(`${ACCOUNTANT_API}/payment-periods`);
+    const response = await axios.get(`${API_URL}/accountant/payment-periods`);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Có lỗi xảy ra khi tải danh sách kỳ thu phí');
+    console.error('Error fetching payment periods:', error);
+    throw error;
   }
 };
 
-// API để lấy danh sách căn hộ
 export const getApartments = async () => {
   try {
-    const response = await axios.get(`${ACCOUNTANT_API}/apartments`);
+    const response = await axios.get(`${API_URL}/accountant/apartments`);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Có lỗi xảy ra khi tải danh sách căn hộ');
+    console.error('Error fetching apartments:', error);
+    throw error;
+  }
+};
+
+export const updatePaymentStatus = async (data) => {
+  try {
+    const response = await axios.put(`${API_URL}/accountant/payment-status/update`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating payment status:', error);
+    throw error;
+  }
+};
+
+export const updatePaymentDetail = async (data) => {
+  try {
+    const response = await axios.patch(`${API_URL}/accountant/payment-status/update-detail`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating payment detail:', error);
+    throw error;
   }
 }; 
