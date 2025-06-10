@@ -1,18 +1,16 @@
 package KTPM.Backend.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import KTPM.Backend.dto.PaymentStatusUpdateRequest;
+import KTPM.Backend.dto.PaymentDetailUpdateRequest;
 import KTPM.Backend.dto.ResidentPaymentDetailResponse;
+import KTPM.Backend.dto.ApartmentOwnershipSelectDTO;
 import KTPM.Backend.entity.PaymentDetail;
 import KTPM.Backend.service.PaymentStatusService;
 import KTPM.Backend.service.PaymentPeriodService;
@@ -21,7 +19,7 @@ import KTPM.Backend.entity.PaymentPeriod;
 import KTPM.Backend.entity.ApartmentOwnership;
 
 @RestController
-@RequestMapping("/api/accountant/payment-status")
+@RequestMapping("/api")
 public class PaymentStatusController {
     @Autowired
     private PaymentStatusService paymentStatusService;
@@ -32,34 +30,79 @@ public class PaymentStatusController {
     @Autowired
     private ApartmentOwnershipService apartmentOwnershipService;
 
-    @GetMapping
-    public ResponseEntity<List<ResidentPaymentDetailResponse>> getAllPayments(
-            @RequestParam(required = false) Integer paymentPeriodId,
-            @RequestParam(required = false) Integer ownershipId) {
-        return ResponseEntity.ok(paymentStatusService.getAllPayments(paymentPeriodId, ownershipId));
+    // API cho cư dân
+    @GetMapping("/resident/payment-status/{ownershipId}")
+    public ResponseEntity<List<ResidentPaymentDetailResponse>> getResidentPayments(
+            @PathVariable Integer ownershipId) {
+        return ResponseEntity.ok(paymentStatusService.getResidentPayments(ownershipId));
     }
 
-    @GetMapping("/by-status")
-    public ResponseEntity<List<ResidentPaymentDetailResponse>> getPaymentsByStatus(
+    @GetMapping("/resident/payment-status/{ownershipId}/by-status")
+    public ResponseEntity<List<ResidentPaymentDetailResponse>> getResidentPaymentsByStatus(
+            @PathVariable Integer ownershipId,
+            @RequestParam PaymentDetail.Status status) {
+        return ResponseEntity.ok(paymentStatusService.getResidentPaymentsByStatus(ownershipId, status));
+    }
+
+    // API cho kế toán
+    @GetMapping("/accountant/payment-status")
+    public ResponseEntity<List<ResidentPaymentDetailResponse>> getAccountantPayments(
+            @RequestParam(required = false) Integer paymentPeriodId,
+            @RequestParam(required = false) String ownershipIds) {
+        return ResponseEntity.ok(paymentStatusService.getAccountantPayments(paymentPeriodId, ownershipIds));
+    }
+
+    @GetMapping("/accountant/payment-status/by-status")
+    public ResponseEntity<List<ResidentPaymentDetailResponse>> getAccountantPaymentsByStatus(
             @RequestParam PaymentDetail.Status status,
             @RequestParam(required = false) Integer paymentPeriodId,
-            @RequestParam(required = false) Integer ownershipId) {
-        return ResponseEntity.ok(paymentStatusService.getPaymentsByStatus(status, paymentPeriodId, ownershipId));
+            @RequestParam(required = false) String ownershipIds) {
+        return ResponseEntity.ok(paymentStatusService.getAccountantPaymentsByStatus(status, paymentPeriodId, ownershipIds));
     }
 
-    @GetMapping("/payment-periods")
+    @GetMapping("/accountant/payment-status/payment-periods")
     public ResponseEntity<List<PaymentPeriod>> getPaymentPeriods() {
         return ResponseEntity.ok(paymentPeriodService.getAllPaymentPeriods());
     }
 
-    @GetMapping("/apartments")
-    public ResponseEntity<List<ApartmentOwnership>> getApartments() {
-        return ResponseEntity.ok(apartmentOwnershipService.getAllOwnerships());
+    @GetMapping("/accountant/payment-status/apartments")
+    public ResponseEntity<List<ApartmentOwnershipSelectDTO>> getApartments() {
+        try {
+            List<ApartmentOwnership> ownerships = apartmentOwnershipService.getLatestOwnerships();
+            List<ApartmentOwnershipSelectDTO> dtos = ownerships.stream()
+                .map(ApartmentOwnershipSelectDTO::fromEntity)
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
-    @PutMapping("/update")
+    @GetMapping("/accountant/payment-status/apartments/{apartmentId}/ownerships")
+    public ResponseEntity<List<ApartmentOwnershipSelectDTO>> getApartmentOwnerships(
+            @PathVariable Integer apartmentId) {
+        try {
+            List<ApartmentOwnership> ownerships = apartmentOwnershipService.getOwnershipsByApartmentId(apartmentId);
+            List<ApartmentOwnershipSelectDTO> dtos = ownerships.stream()
+                .map(ApartmentOwnershipSelectDTO::fromEntity)
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/accountant/payment-status/update")
     public ResponseEntity<ResidentPaymentDetailResponse> updatePaymentStatus(
             @RequestBody PaymentStatusUpdateRequest request) {
         return ResponseEntity.ok(paymentStatusService.updatePaymentStatus(request));
+    }
+
+    @PatchMapping("/accountant/payment-status/update-detail")
+    public ResponseEntity<ResidentPaymentDetailResponse> updatePaymentDetail(
+            @RequestBody PaymentDetailUpdateRequest request) {
+        return ResponseEntity.ok(paymentStatusService.updatePaymentDetail(request));
     }
 } 

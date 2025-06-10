@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { createPaymentDetail } from '../../api/serviceUsage'
-import { getAllPaymentPeriods } from '../../api/paymentPeriod'
-import { getAllServiceTypes } from '../../api/serviceType'
-import { getAllOwnerships } from '../../api/ownership'
-import '../../styles/ServiceUsage.css'
+import React, { useState, useEffect } from 'react';
+import { createPaymentDetail } from '../../api/serviceUsage';
+import { getAllPaymentPeriods } from '../../api/paymentPeriod';
+import { getAllServiceTypes } from '../../api/serviceType';
+import { getAllOwnerships } from '../../api/ownership';
+import '../../styles/ServiceUsage.css';
 
 const ServiceUsageManagement = () => {
-  const [paymentPeriods, setPaymentPeriods] = useState([])
-  const [serviceTypes, setServiceTypes] = useState([])
-  const [ownerships, setOwnerships] = useState([])
-  const [selectedPeriod, setSelectedPeriod] = useState('')
-  const [selectedOwnership, setSelectedOwnership] = useState('')
-  const [selectedService, setSelectedService] = useState('')
-  const [amount, setAmount] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [paymentPeriods, setPaymentPeriods] = useState([]);
+  const [serviceTypes, setServiceTypes] = useState([]);
+  const [ownerships, setOwnerships] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedOwnership, setSelectedOwnership] = useState('');
+  const [selectedService, setSelectedService] = useState('');
+  const [selectedServiceUnit, setSelectedServiceUnit] = useState('');
+  const [amount, setAmount] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -23,53 +24,80 @@ const ServiceUsageManagement = () => {
         const [periodsData, servicesData, ownershipsData] = await Promise.all([
           getAllPaymentPeriods(),
           getAllServiceTypes(),
-          getAllOwnerships()
-        ])
-        setPaymentPeriods(periodsData)
-        setServiceTypes(servicesData)
-        setOwnerships(ownershipsData)
+          getAllOwnerships(),
+        ]);
+        setPaymentPeriods(periodsData);
+        setServiceTypes(servicesData);
+        setOwnerships(ownershipsData);
       } catch (error) {
-        setError('Có lỗi khi tải dữ liệu')
+        setError('Có lỗi khi tải dữ liệu');
       }
-    }
+    };
 
-    loadData()
-  }, [])
+    loadData();
+  }, []);
+
+  const handleServiceChange = (e) => {
+    const serviceId = e.target.value;
+    setSelectedService(serviceId);
+    const service = serviceTypes.find(
+      (s) => s.serviceTypeId.toString() === serviceId
+    );
+    setSelectedServiceUnit(service?.unit || '');
+  };
+
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || (parseFloat(value) > 0 && !isNaN(value))) {
+      setAmount(value);
+    }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-    setLoading(true)
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
 
     try {
-      if (!selectedPeriod || !selectedOwnership || !selectedService || !amount) {
-        throw new Error('Vui lòng điền đầy đủ thông tin')
+      if (
+        !selectedPeriod ||
+        !selectedOwnership ||
+        !selectedService ||
+        !amount
+      ) {
+        throw new Error('Vui lòng điền đầy đủ thông tin');
+      }
+
+      const amountValue = parseFloat(amount);
+      if (amountValue <= 0) {
+        throw new Error('Số lượng phải lớn hơn 0');
       }
 
       const data = {
         paymentPeriodId: parseInt(selectedPeriod),
         ownershipId: parseInt(selectedOwnership),
         serviceTypeId: parseInt(selectedService),
-        amount: parseFloat(amount)
-      }
+        amount: amountValue,
+      };
 
-      await createPaymentDetail(data)
-      setSuccess('Tạo chi tiết thanh toán thành công')
-      
+      await createPaymentDetail(data);
+      setSuccess('Tạo chi tiết thanh toán thành công');
+
       // Reset form
-      setSelectedService('')
-      setAmount('')
+      setSelectedService('');
+      setAmount('');
+      setSelectedServiceUnit('');
     } catch (error) {
-      setError(error.response?.data?.message || error.message)
+      setError(error.response?.data?.message || error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getPaymentPeriodStatus = (period) => {
-    return period.completed ? ' (Đã kết thúc)' : ' (Đang diễn ra)'
-  }
+    return period.completed ? ' (Đã kết thúc)' : ' (Đang diễn ra)';
+  };
 
   return (
     <div className="service-usage-container">
@@ -81,19 +109,21 @@ const ServiceUsageManagement = () => {
       <form onSubmit={handleSubmit} className="service-usage-form">
         <div className="form-group">
           <label>Kỳ thu phí:</label>
-          <select 
+          <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
             required
           >
             <option value="">Chọn kỳ thu phí</option>
-            {paymentPeriods.map(period => (
-              <option 
-                key={period.paymentPeriodId} 
+            {paymentPeriods.map((period) => (
+              <option
+                key={period.paymentPeriodId}
                 value={period.paymentPeriodId}
                 className={period.completed ? 'expired-period' : ''}
               >
-                {`Tháng ${period.month}/${period.year}${getPaymentPeriodStatus(period)}`}
+                {`Tháng ${period.month}/${period.year}${getPaymentPeriodStatus(
+                  period
+                )}`}
               </option>
             ))}
           </select>
@@ -101,15 +131,15 @@ const ServiceUsageManagement = () => {
 
         <div className="form-group">
           <label>Căn hộ:</label>
-          <select 
+          <select
             value={selectedOwnership}
             onChange={(e) => setSelectedOwnership(e.target.value)}
             required
           >
             <option value="">Chọn căn hộ</option>
-            {ownerships.map(ownership => (
+            {ownerships.map((ownership) => (
               <option key={ownership.ownershipId} value={ownership.ownershipId}>
-                {`${ownership.apartmentCode} - ${ownership.userFullName}`}
+                {`${ownership.apartmentCode}`}
               </option>
             ))}
           </select>
@@ -117,15 +147,17 @@ const ServiceUsageManagement = () => {
 
         <div className="form-group">
           <label>Loại dịch vụ:</label>
-          <select 
+          <select
             value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
+            onChange={handleServiceChange}
             required
           >
             <option value="">Chọn dịch vụ</option>
-            {serviceTypes.map(service => (
+            {serviceTypes.map((service) => (
               <option key={service.serviceTypeId} value={service.serviceTypeId}>
-                {service.serviceName} - {service.unitPrice.toLocaleString('vi-VN')}đ/đơn vị
+                {`${service.serviceName} - ${service.unitPrice.toLocaleString(
+                  'vi-VN'
+                )}đ`}
               </option>
             ))}
           </select>
@@ -133,14 +165,20 @@ const ServiceUsageManagement = () => {
 
         <div className="form-group">
           <label>Số lượng sử dụng:</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            min="0"
-            step="0.01"
-            required
-          />
+          <div className="input-with-unit">
+            <input
+              type="number"
+              value={amount}
+              onChange={handleAmountChange}
+              min="0.01"
+              step="0.01"
+              required
+              placeholder="Nhập số lượng"
+            />
+            {selectedServiceUnit && (
+              <span className="unit">{selectedServiceUnit}</span>
+            )}
+          </div>
         </div>
 
         <button type="submit" disabled={loading}>
@@ -148,7 +186,7 @@ const ServiceUsageManagement = () => {
         </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default ServiceUsageManagement 
+export default ServiceUsageManagement;

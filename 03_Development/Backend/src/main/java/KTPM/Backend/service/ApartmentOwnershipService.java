@@ -2,6 +2,8 @@ package KTPM.Backend.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,10 @@ public class ApartmentOwnershipService {
 
     public List<ApartmentOwnership> getAllOwnerships() {
         return apartmentOwnershipRepository.findAll();
+    }
+
+    public List<ApartmentOwnership> getLatestOwnerships() {
+        return apartmentOwnershipRepository.findLatestOwnershipForEachApartment();
     }
 
     public ApartmentOwnership getOwnershipById(Integer id) {
