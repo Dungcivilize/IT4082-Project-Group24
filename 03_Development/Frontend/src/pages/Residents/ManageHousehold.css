@@ -151,7 +151,6 @@
   gap: 12px;
 }
 
-
 .back-button {
   display: flex;
   align-items: center;
@@ -210,7 +209,8 @@
   gap: 16px;
 }
 
-.resident-card, .vehicle-card {
+.resident-card,
+.vehicle-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -218,7 +218,8 @@
   transition: all 0.2s;
 }
 
-.resident-card:hover, .vehicle-card:hover {
+.resident-card:hover,
+.vehicle-card:hover {
   border-color: #3b82f6;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
 }
@@ -288,8 +289,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .status-badge {
@@ -314,26 +319,26 @@
   .manage-household {
     padding: 16px;
   }
-  
+
   .household-grid {
     grid-template-columns: 1fr;
     padding: 16px;
   }
-  
+
   .tab-content {
     grid-template-columns: 1fr;
   }
-  
+
   .detail-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .tabs {
     flex-wrap: wrap;
   }
-  
+
   .household-info {
     grid-template-columns: 1fr;
   }
@@ -343,34 +348,33 @@
   .header h1 {
     font-size: 24px;
   }
-  
+
   .detail-title {
     font-size: 20px;
   }
-  
+
   .breadcrumb {
     flex-wrap: wrap;
   }
 
   .empty-state {
-  text-align: center;
-  color: #777;
-  margin-top: 2rem;
-}
+    text-align: center;
+    color: #777;
+    margin-top: 2rem;
+  }
 
-.empty-icon {
-  margin-bottom: 0.5rem;
-  color: #ccc;
-}
+  .empty-icon {
+    margin-bottom: 0.5rem;
+    color: #ccc;
+  }
 
-.status-empty {
-  background-color: #ccc;
-  color: #333;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
+  .status-empty {
+    background-color: #ccc;
+    color: #333;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+  }
 }
 
 /* Existing styles... */
@@ -412,7 +416,8 @@
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   z-index: 1000;
   min-width: 120px;
   padding: 4px 0;
@@ -541,7 +546,8 @@
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #e5e7eb;
@@ -557,9 +563,9 @@
   cursor: pointer;
 }
 
-
 .household-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
 }
 
@@ -573,3 +579,13 @@
   margin: 0;
 }
 
+.error-message {
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+}
