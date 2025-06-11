@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getResidentPayments, getResidentPaymentsByStatus } from '../../api/paymentStatus';
+import {
+  getResidentPayments,
+  getResidentPaymentsByStatus,
+} from '../../api/paymentStatus';
 import { API_URL } from '../../constants/api';
 import '../../styles/Resident.css';
 import QRCodeImage from '../../assets/QRCode.jpg';
@@ -38,8 +41,7 @@ const PaymentManagement = () => {
       // Lọc ra các khoản phí chưa thanh toán hoặc đang xử lý
       const pendingPayments = payments.filter(
         (payment) =>
-          payment.status === 'UNPAID' ||
-          payment.status === 'PROCESSING'
+          payment.status === 'UNPAID' || payment.status === 'PROCESSING'
       );
       setPendingPayments(pendingPayments);
       setError('');
@@ -166,9 +168,7 @@ const PaymentManagement = () => {
     <div key={payment.paymentDetailId} className="payment-card">
       <div className="payment-header">
         <h3>{payment.serviceName}</h3>
-        <span
-          className={`status-badge ${getStatusClass(payment.status)}`}
-        >
+        <span className={`status-badge ${getStatusClass(payment.status)}`}>
           {getStatusText(payment.status)}
         </span>
       </div>
@@ -250,7 +250,7 @@ const PaymentManagement = () => {
           <div className="payment-form">
             <h3>Thanh toán phí {selectedPayment.serviceName}</h3>
             <p>Kỳ thu: {selectedPayment.periodInfo}</p>
-            <p>Tổng tiền: {formatCurrency(selectedPayment.totalPrice)}</p>
+            <p>Tổng tiền: {formatCurrency(selectedPayment.price)}</p>
             <div className="qr-code-container">
               <img
                 src={QRCodeImage}
@@ -329,7 +329,9 @@ const PaymentManagement = () => {
                     <div className="payment-header">
                       <h3>{payment.serviceName}</h3>
                       <span
-                        className={`status-badge ${getStatusClass(payment.status)}`}
+                        className={`status-badge ${getStatusClass(
+                          payment.status
+                        )}`}
                       >
                         {getStatusText(payment.status)}
                       </span>
