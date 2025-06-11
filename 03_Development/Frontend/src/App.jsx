@@ -12,7 +12,14 @@ import ServiceUsageManagement from './components/accountant/ServiceUsageManageme
 import PaymentStatusManagement from './components/accountant/PaymentStatusManagement'
 import PaymentConfirmation from './components/accountant/PaymentConfirmation'
 import FinancialStatistics from './components/accountant/FinancialStatistics'
+import Layout from './components/admin/Layout'
+import AdminDashboard from './components/admin/AdminDashboard'
+import UserList from './pages/Users/UserList'
+import CreateUser from './pages/Users/CreateUser'
+import ManageHousehold from './pages/Residents/ManageHousehold'
+
 import './App.css'
+import ApartmentEmpty from './pages/Residents/ApartmentEmpty'
 
 function App() {
   return (
@@ -42,6 +49,16 @@ function App() {
           <Route path="statistics" element={<FinancialStatistics />} />
           {/* Route mặc định cho /accountant */}
           <Route index element={<Navigate to="services" replace />} />
+        </Route>
+
+        {/* Routes cho Kế toán */}
+        <Route path="/admin" element={<Layout />}>
+          <Route path="users/list" element={<UserList />} />
+          <Route path="users/add" element={<CreateUser />} />
+          <Route path="households" element={<ManageHousehold />} />
+          <Route path="apartment-empty" element={<ApartmentEmpty />} />
+          {/* Route mặc định cho /admin*/}
+          <Route index element={<AdminDashboard />} />
         </Route>
       </Routes>
     </Router>

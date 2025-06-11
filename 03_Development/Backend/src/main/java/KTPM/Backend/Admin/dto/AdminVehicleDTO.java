@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdminVehicleDTO {
     private Integer vehicleId;
-    private Integer ownerId;
+    private String vehicleOwnerName;
     private String type;
     private String licensePlate;
 }

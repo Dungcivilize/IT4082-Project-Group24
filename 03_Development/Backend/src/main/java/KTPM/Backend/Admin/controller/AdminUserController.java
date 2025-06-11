@@ -65,4 +65,12 @@ public class AdminUserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/no-active-ownership")
+public ResponseEntity<List<AdminUserDTO>> getUsersWithoutActiveOwnership() {
+    List<AdminUserDTO> users = userService.getUsersWithoutActiveOwnership();
+    return ResponseEntity.ok(users);
+}
+
+
 }

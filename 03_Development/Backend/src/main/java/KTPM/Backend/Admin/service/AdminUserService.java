@@ -83,4 +83,13 @@ public class AdminUserService {
     public void deleteUser(Integer id) {
         userRepository.deleteById(id);
     }
+
+    // Lấy user chưa là chủ hộ căn hộ nào cả
+    public List<AdminUserDTO> getUsersWithoutActiveOwnership() {
+    List<User> users = userRepository.findUsersNotOwningAnyActiveApartment();
+    return users.stream().map(this::toDTO).collect(Collectors.toList());
+}
+
+
+    
 }

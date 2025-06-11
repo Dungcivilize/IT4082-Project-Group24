@@ -16,16 +16,17 @@ public class AdminVehicleService {
     private final VehicleRepository vehicleRepository;
 
         public List<AdminVehicleDTO> getVehiclesByOwnershipId(Integer ownershipId) {
-        List<Vehicle> vehicles = vehicleRepository.findAllByOwnership_OwnershipId(ownershipId);
+    List<Vehicle> vehicles = vehicleRepository.findAllByOwnership_OwnershipId(ownershipId);
 
-        return vehicles.stream()
-                .map(v -> new AdminVehicleDTO(
-                        v.getVehicleId(),
-                        v.getOwner().getResidentId(),
-                        v.getType().name(), // enum -> String
-                        v.getLicensePlate()
-                ))
-                .collect(Collectors.toList());
-    }
+    return vehicles.stream()
+            .map(v -> new AdminVehicleDTO(
+                    v.getVehicleId(),
+                    v.getOwner().getFullName(), // ✅ đúng với kiểu String
+                    v.getType().name(),         // enum -> String
+                    v.getLicensePlate()
+            ))
+            .collect(Collectors.toList());
+}
+
 
 }
