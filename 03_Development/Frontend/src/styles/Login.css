@@ -7,24 +7,56 @@
 }
 
 .login-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  background: rgba(226, 232, 240, 0.8);
+  backdrop-filter: blur(8px);
 }
 
-.login-container h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 2rem;
-  font-size: 1.8rem;
+.login-modal {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
 }
 
 .login-form-container {
+  position: relative;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
   width: 100%;
-  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-button:hover {
+  background-color: #f3f4f6;
+  color: #333;
 }
 
 .login-form-container h2 {
@@ -35,24 +67,23 @@
 }
 
 .login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: block;
+  width: 100%;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
   color: #555;
   font-weight: 500;
-  text-align: left;
 }
 
 .form-group input {
+  width: 100%;
   padding: 0.8rem;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -66,6 +97,7 @@
 }
 
 .login-button {
+  width: 100%;
   background-color: #4a90e2;
   color: white;
   padding: 0.8rem;
@@ -97,4 +129,19 @@
   margin-bottom: 1rem;
   text-align: center;
   font-size: 0.9rem;
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  color: #4a90e2;
+  text-decoration: none;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  transition: color 0.3s;
+}
+
+.back-link:hover {
+  color: #357abd;
+  text-decoration: underline;
 } 

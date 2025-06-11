@@ -11,4 +11,5 @@ import KTPM.Backend.entity.TemporaryResident;
 @Repository
 public interface TemporaryResidentRepository extends JpaRepository<TemporaryResident, Integer> {
     List<TemporaryResident> findByOwnership(ApartmentOwnership ownership);
+    List<TemporaryResident> findByOwnership_OwnershipId(Integer ownershipId);
 } 

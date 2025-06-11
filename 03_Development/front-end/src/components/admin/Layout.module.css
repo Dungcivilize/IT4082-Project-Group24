@@ -1,0 +1,18 @@
+.layoutContainer {
+  display: flex;
+  height: 100vh; /* full viewport height */
+  background-color: #f9fafb; /* tương đương bg-gray-50 */
+}
+
+.mainArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.mainContent {
+  padding: 24px; /* tương đương p-6 */
+  overflow: auto;
+  flex-grow: 1;
+}

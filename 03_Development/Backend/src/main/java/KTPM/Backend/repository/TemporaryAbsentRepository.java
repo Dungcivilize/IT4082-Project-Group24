@@ -15,6 +15,7 @@ import KTPM.Backend.entity.TemporaryAbsent;
 @Repository
 public interface TemporaryAbsentRepository extends JpaRepository<TemporaryAbsent, Integer> {
     List<TemporaryAbsent> findByResident_Ownership(ApartmentOwnership ownership);
+    List<TemporaryAbsent> findByResident_Ownership_OwnershipId(Integer ownershipId);
 
     @Query("SELECT CASE WHEN COUNT(ta) > 0 THEN true ELSE false END FROM TemporaryAbsent ta " +
            "WHERE ta.resident = :resident " +

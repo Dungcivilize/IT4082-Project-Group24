@@ -125,6 +125,87 @@ CREATE TABLE `payment_detail` (
     UNIQUE KEY `unique_payment_detail` (`payment_period_id`, `ownership_id`, `service_type_id`)
 );
 
+
+
+-- Trigger thay đổi status của apartment khi ownership thay đổi 
+DELIMITER //
+
+CREATE TRIGGER trg_update_apartment_status_after_insert
+AFTER INSERT ON apartment_ownership
+FOR EACH ROW
+BEGIN
+    DECLARE active_count INT;
+
+    SELECT COUNT(*) INTO active_count
+    FROM apartment_ownership
+    WHERE apartment_id = NEW.apartment_id AND status = 'active';
+
+    IF active_count > 0 THEN
+        UPDATE apartment
+        SET status = 'occupied'
+        WHERE apartment_id = NEW.apartment_id;
+    ELSE
+        UPDATE apartment
+        SET status = 'empty'
+        WHERE apartment_id = NEW.apartment_id;
+    END IF;
+END;
+//
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER trg_update_apartment_status_after_update
+AFTER UPDATE ON apartment_ownership
+FOR EACH ROW
+BEGIN
+    DECLARE active_count INT;
+
+    SELECT COUNT(*) INTO active_count
+    FROM apartment_ownership
+    WHERE apartment_id = NEW.apartment_id AND status = 'active';
+
+    IF active_count > 0 THEN
+        UPDATE apartment
+        SET status = 'occupied'
+        WHERE apartment_id = NEW.apartment_id;
+    ELSE
+        UPDATE apartment
+        SET status = 'empty'
+        WHERE apartment_id = NEW.apartment_id;
+    END IF;
+END;
+//
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER trg_update_apartment_status_after_delete
+AFTER DELETE ON apartment_ownership
+FOR EACH ROW
+BEGIN
+    DECLARE active_count INT;
+
+    SELECT COUNT(*) INTO active_count
+    FROM apartment_ownership
+    WHERE apartment_id = OLD.apartment_id AND status = 'active';
+
+    IF active_count > 0 THEN
+        UPDATE apartment
+        SET status = 'occupied'
+        WHERE apartment_id = OLD.apartment_id;
+    ELSE
+        UPDATE apartment
+        SET status = 'empty'
+        WHERE apartment_id = OLD.apartment_id;
+    END IF;
+END;
+//
+
+DELIMITER ;
+
 INSERT INTO apartment (apartment_code, floor, area, status) VALUES
 ('A101', 1, 75.5, 'occupied'),
 ('A102', 1, 80.0, 'empty'),
@@ -180,3 +261,5 @@ INSERT INTO payment_detail (payment_period_id, ownership_id, service_type_id, am
 (1, 2, 2, 25, 250000, 'UNPAID'),    -- Nước
 (1, 2, 4, 1, 100000, 'UNPAID'),     -- Ô tô
 (1, 2, 5, 1, 200000, 'UNPAID');     -- Quản lý
+
+

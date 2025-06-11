@@ -37,14 +37,7 @@ const Home = () => {
       </div>
 
       {showLoginModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <button className="close-button" onClick={() => setShowLoginModal(false)}>
-              <i className="fas fa-times"></i>
-            </button>
-            <Login />
-          </div>
-        </div>
+        <Login onClose={() => setShowLoginModal(false)} />
       )}
     </div>
   )
