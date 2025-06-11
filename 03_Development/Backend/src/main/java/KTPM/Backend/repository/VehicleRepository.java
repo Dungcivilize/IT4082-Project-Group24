@@ -1,6 +1,7 @@
 package KTPM.Backend.repository;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
     int countActiveVehiclesByOwnershipAndType(@Param("ownershipId") Integer ownershipId, @Param("type") Vehicle.VehicleType type);
 
     List<Vehicle> findAllByOwnership_OwnershipId(Integer ownershipId);
+
+    @Query("SELECT v.type, COUNT(v) FROM Vehicle v GROUP BY v.type")
+List<Object[]> countByTypeRaw();
+
 } 

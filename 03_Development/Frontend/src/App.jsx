@@ -20,6 +20,7 @@ import ManageHousehold from './pages/Residents/ManageHousehold'
 
 import './App.css'
 import ApartmentEmpty from './pages/Residents/ApartmentEmpty'
+import StatisticsPage from './pages/Statistics/StatisticsPage'
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
           <Route path="users/add" element={<CreateUser />} />
           <Route path="households" element={<ManageHousehold />} />
           <Route path="apartment-empty" element={<ApartmentEmpty />} />
+          <Route path="stats" element={<StatisticsPage />} />
           {/* Route mặc định cho /admin*/}
           <Route index element={<AdminDashboard />} />
         </Route>

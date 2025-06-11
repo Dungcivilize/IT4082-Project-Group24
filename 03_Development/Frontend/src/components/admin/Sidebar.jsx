@@ -22,7 +22,13 @@ const Sidebar = () => {
         { label: 'Căn hộ trống', path: '/admin/apartment-empty' },
       ],
     },
-    { label: 'Thống kê', path: '/admin', icon: '📊' },
+    {
+      label: 'Thống kê',
+      icon: '📊',
+      children: [
+        { label: 'Thống kê', path: '/admin/stats', icon: '📊' },
+      ],
+    },
   ];
 
   const [openMenus, setOpenMenus] = useState({});

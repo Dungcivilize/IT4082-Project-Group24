@@ -1,37 +1,60 @@
 .admin-dashboard {
-  padding: 24px;
-  background-color: #f5f7fa;
+  padding: 2rem;
+  background: #f9fafb;
+  font-family: 'Segoe UI', sans-serif;
   min-height: 100vh;
 }
 
 .admin-dashboard h2 {
-  margin-bottom: 12px;
+  font-size: 2rem;
+  color: #1f2937;
+}
+
+.admin-dashboard p {
+  color: #4b5563;
+  margin-bottom: 2rem;
 }
 
 .dashboard-widgets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 24px;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
 .widget {
   background: white;
   border-radius: 12px;
-  padding: 20px;
-  flex: 1;
-  min-width: 220px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: 0.2s ease;
 }
 
 .widget h4 {
-  margin-bottom: 8px;
-  font-size: 16px;
-  color: #333;
+  font-size: 1.2rem;
+  color: #374151;
+  margin-bottom: 0.5rem;
 }
 
 .widget p {
-  font-size: 20px;
+  font-size: 1.8rem;
   font-weight: bold;
-  color: #007bff;
+  color: #111827;
+}
+
+.dashboard-error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 1rem;
+  border-radius: 8px;
+  color: #b91c1c;
+}
+
+.dashboard-error button {
+  margin-top: 1rem;
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
 }
