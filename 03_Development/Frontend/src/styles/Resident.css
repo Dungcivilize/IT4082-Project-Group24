@@ -1178,4 +1178,34 @@ h2 {
   border-radius: 4px;
   margin-top: 8px;
   border-left: 4px solid #d32f2f;
+}
+
+/* Fix layout cho các form container */
+.residency-form,
+.vehicle-form,
+.payment-form {
+  display: block !important;
+  width: 100% !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+  grid-column: 1 / -1 !important;
+}
+
+/* Fix layout cho các danh sách */
+.history-section,
+.vehicle-list,
+.payment-list {
+  display: block !important;
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
+}
+
+/* Fix layout cho các grid hiển thị danh sách */
+.payment-grid,
+.vehicle-grid,
+.history-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
 } 
