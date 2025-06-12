@@ -29,11 +29,13 @@ public interface ApartmentOwnershipRepository extends JpaRepository<ApartmentOwn
 
     List<ApartmentOwnership> findByUserUserId(Integer userId);
     @Query("SELECT ao FROM ApartmentOwnership ao " +
-           "WHERE (ao.apartment.apartmentId, ao.startDate) IN " +
-           "(SELECT ao2.apartment.apartmentId, MAX(ao2.startDate) " +
-           "FROM ApartmentOwnership ao2 " +
-           "GROUP BY ao2.apartment.apartmentId) " +
-           "ORDER BY ao.apartment.apartmentCode")
+            "WHERE (ao.apartment.apartmentId, ao.startDate) IN " +
+            "(SELECT ao2.apartment.apartmentId, MAX(ao2.startDate) " +
+            "FROM ApartmentOwnership ao2 " +
+            "GROUP BY ao2.apartment.apartmentId) " +
+            "AND ao.status = 'active' " +
+            "AND ao.endDate IS NULL " +
+            "ORDER BY ao.apartment.apartmentCode")
     List<ApartmentOwnership> findLatestOwnershipForEachApartment();
     @Query("SELECT new KTPM.Backend.Admin.dto.AdminOwnershipDTO(" +
        "ao.ownershipId, " +
